@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: micoz-postgres
+    environment:
+      POSTGRES_DB: micoz_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - micoz-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: micoz-backend
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/micoz_db
+      - JWT_SECRET=your-super-secret-jwt-key-for-development
+      - JWT_REFRESH_SECRET=your-super-secret-refresh-key-for-development
+      - PORT=5000
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      - postgres
+    networks:
+      - micoz-network
+    command: npm run dev
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: micoz-frontend
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000/api
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - micoz-network
+    command: npm run dev
+
+volumes:
+  postgres_data:
+
+networks:
+  micoz-network:
+    driver: bridge

@@ -1,0 +1,255 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Setup Project Repository and Base Architecture",
+        "description": "Initialize the project repository with React.js 18 frontend and Node.js 18 backend structure following the technical requirements specified in the PRD.",
+        "details": "1. Create a monorepo structure with separate frontend and backend directories\n2. Frontend setup:\n   - Initialize React 18 with TypeScript\n   - Configure Styled-components for styling\n   - Setup Redux Toolkit for state management\n   - Configure React Router v6\n   - Install Framer Motion for animations\n3. Backend setup:\n   - Initialize Node.js 18 with Express.js\n   - Configure PostgreSQL connection with Prisma ORM\n   - Setup basic JWT authentication structure\n   - Configure AWS S3 connection for file storage\n4. Setup development environment:\n   - Configure ESLint and Prettier\n   - Setup Git hooks with Husky\n   - Create Docker configuration for development environment",
+        "testStrategy": "1. Verify all dependencies are correctly installed and working\n2. Ensure the development server starts without errors\n3. Validate the connection between frontend and backend\n4. Test database connection and basic CRUD operations\n5. Verify AWS S3 connection for file uploads",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize Monorepo Structure and Basic Configuration",
+            "description": "Create the foundational monorepo structure with separate frontend and backend directories, initialize basic package.json files, and setup workspace configuration.",
+            "dependencies": [],
+            "details": "Create root directory structure with /frontend and /backend folders. Initialize package.json in root with workspace configuration for monorepo management. Setup basic .gitignore, README.md, and environment variable templates (.env.example). Configure npm/yarn workspaces to manage dependencies across both frontend and backend.",
+            "status": "done",
+            "testStrategy": "Verify directory structure is created correctly, package.json files are valid, and workspace commands execute without errors"
+          },
+          {
+            "id": 2,
+            "title": "Setup React 18 Frontend with TypeScript and Core Dependencies",
+            "description": "Initialize React 18 application with TypeScript, install and configure Styled-components, Redux Toolkit, React Router v6, and Framer Motion.",
+            "dependencies": [
+              "1.1"
+            ],
+            "details": "Use create-react-app with TypeScript template in /frontend directory. Install styled-components with TypeScript support, Redux Toolkit with RTK Query, React Router v6, and Framer Motion. Configure TypeScript strict mode, setup basic folder structure (components, pages, store, styles, types). Create initial Redux store configuration and basic routing setup.",
+            "status": "done",
+            "testStrategy": "Verify React development server starts successfully, TypeScript compilation works, Redux store is properly configured, and routing navigation functions correctly"
+          },
+          {
+            "id": 3,
+            "title": "Setup Node.js Backend with Express and Database Configuration",
+            "description": "Initialize Node.js 18 backend with Express.js framework, configure PostgreSQL connection using Prisma ORM, and setup basic server structure.",
+            "dependencies": [
+              "1.1"
+            ],
+            "details": "Initialize Node.js project in /backend directory with Express.js. Install Prisma ORM and configure PostgreSQL connection. Create basic server structure with middleware setup (cors, helmet, express.json). Initialize Prisma schema with basic user model. Setup environment configuration for database URL and other secrets. Create basic API routes structure.",
+            "status": "done",
+            "testStrategy": "Verify Express server starts on specified port, database connection is established successfully, Prisma migrations run without errors, and basic API endpoints respond correctly"
+          },
+          {
+            "id": 4,
+            "title": "Configure Authentication Infrastructure and AWS S3 Integration",
+            "description": "Setup JWT authentication structure in the backend and configure AWS S3 connection for file storage capabilities.",
+            "dependencies": [
+              "1.3"
+            ],
+            "details": "Install and configure JWT authentication packages (jsonwebtoken, bcryptjs). Create authentication middleware for token verification. Setup JWT signing and refresh token logic. Install AWS SDK and configure S3 client with environment variables. Create file upload utilities and middleware for handling multipart form data. Implement basic user registration and login endpoints with password hashing.",
+            "status": "done",
+            "testStrategy": "Test JWT token generation and verification, verify password hashing works correctly, confirm S3 connection and file upload functionality, and validate authentication middleware blocks unauthorized requests"
+          },
+          {
+            "id": 5,
+            "title": "Setup Development Environment and Docker Configuration",
+            "description": "Configure development tools including ESLint, Prettier, Husky git hooks, and create Docker configuration for consistent development environment.",
+            "dependencies": [
+              "1.2",
+              "1.3"
+            ],
+            "details": "Install and configure ESLint with TypeScript rules for both frontend and backend. Setup Prettier with consistent formatting rules across the project. Install Husky and configure pre-commit hooks for linting and formatting. Create Docker Compose configuration with services for React app, Node.js API, and PostgreSQL database. Include volume mounts for development hot-reloading. Create development startup scripts.",
+            "status": "done",
+            "testStrategy": "Verify ESLint catches code issues, Prettier formats code consistently, git hooks prevent bad commits, Docker containers start successfully, and hot-reloading works in development mode"
+          },
+          {
+            "id": 6,
+            "title": "Create Monorepo Structure and Initialize Project Directories",
+            "description": "Set up the basic monorepo structure with separate frontend and backend directories, initialize package.json files, and configure workspace management.",
+            "dependencies": [],
+            "details": "Create root directory structure with /frontend and /backend folders. Initialize root package.json with workspace configuration. Set up basic .gitignore, README.md, and directory structure. Configure npm/yarn workspaces for monorepo management.",
+            "status": "done",
+            "testStrategy": "Verify directory structure is created correctly and workspace commands work properly"
+          },
+          {
+            "id": 7,
+            "title": "Initialize React 18 Frontend with TypeScript and Core Dependencies",
+            "description": "Set up React 18 application with TypeScript, install and configure Styled-components, Redux Toolkit, React Router v6, and Framer Motion.",
+            "dependencies": [
+              "1.1"
+            ],
+            "details": "Use create-react-app with TypeScript template. Install styled-components with TypeScript definitions. Configure Redux Toolkit store structure with basic slices. Set up React Router v6 with basic routing structure. Install Framer Motion for animations. Configure TypeScript strict mode and path aliases.",
+            "status": "done",
+            "testStrategy": "Verify React app starts successfully, all dependencies are properly installed, and TypeScript compilation works without errors"
+          },
+          {
+            "id": 8,
+            "title": "Initialize Node.js 18 Backend with Express and Database Configuration",
+            "description": "Set up Node.js 18 backend with Express.js framework, configure PostgreSQL connection using Prisma ORM, and establish basic server structure.",
+            "dependencies": [
+              "1.1"
+            ],
+            "details": "Initialize Node.js project with Express.js. Install and configure Prisma ORM with PostgreSQL adapter. Create basic database schema and run initial migration. Set up Express middleware for CORS, body parsing, and error handling. Configure environment variables for database connection.",
+            "status": "done",
+            "testStrategy": "Verify server starts successfully, database connection is established, and basic API endpoints respond correctly"
+          },
+          {
+            "id": 9,
+            "title": "Configure Authentication Structure and AWS S3 Integration",
+            "description": "Set up JWT authentication infrastructure and configure AWS S3 connection for file storage on the backend.",
+            "dependencies": [
+              "1.3"
+            ],
+            "details": "Install and configure JWT libraries (jsonwebtoken, bcryptjs). Create user authentication middleware and basic auth routes structure. Install AWS SDK and configure S3 bucket connection. Create file upload middleware using multer and S3. Set up environment variables for JWT secrets and AWS credentials.",
+            "status": "done",
+            "testStrategy": "Test JWT token generation and validation, verify S3 connection and file upload functionality"
+          },
+          {
+            "id": 10,
+            "title": "Setup Development Environment and Tools Configuration",
+            "description": "Configure development tools including ESLint, Prettier, Husky git hooks, and Docker development environment.",
+            "dependencies": [
+              "1.2",
+              "1.3"
+            ],
+            "details": "Install and configure ESLint with TypeScript rules for both frontend and backend. Set up Prettier with consistent formatting rules. Configure Husky for pre-commit hooks running linting and formatting. Create Docker Compose configuration for development environment including PostgreSQL service. Set up VS Code workspace settings and recommended extensions.",
+            "status": "done",
+            "testStrategy": "Verify linting and formatting rules work correctly, git hooks execute properly, and Docker development environment starts successfully"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Implement Design System and UI Components",
+        "description": "Create a comprehensive design system based on the specified color palette, typography, and UI components that align with MICOZ's brand identity.",
+        "details": "1. Create a design tokens file with the specified color palette:\n   - Primary: Deep Forest Green (#2C5F41), Sage Green (#87A96B), Soft Mint (#B8D4C6)\n   - Secondary: Warm Beige (#F5F1ED), Ivory White (#FEFCF8), Charcoal Grey (#2B2B2B)\n   - Accent: Rose Gold (#E8B4A0), Soft Coral (#F2B5A7)\n2. Setup typography system:\n   - Import and configure Pretendard (한글), Inter (영문) as primary fonts\n   - Import and configure Noto Serif KR (한글), Playfair Display (영문) as secondary fonts\n   - Create typography scale as specified in the PRD\n3. Build reusable UI components:\n   - Button system (Primary, Secondary, Text buttons)\n   - Card system (Product, Story, Review cards)\n   - Form elements (Input fields, Select boxes, Checkboxes/Radio buttons)\n   - Navigation components\n   - Modal and dialog components\n4. Create a Storybook to document all components",
+        "testStrategy": "1. Visual regression testing for all UI components\n2. Accessibility testing to ensure WCAG compliance\n3. Responsive design testing across different device sizes\n4. Cross-browser compatibility testing\n5. Storybook documentation review",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Develop Main Page and Navigation Structure",
+        "description": "Implement the main page with hero section, product showcases, and navigation structure according to the information architecture defined in the PRD.",
+        "details": "1. Create responsive header with navigation menu following the IA structure:\n   - Brand Story\n   - Products (with dropdown for categories)\n   - Collections\n   - Beauty Guide\n   - Community\n   - Customer Service\n2. Implement hero section with brand philosophy visuals and messaging\n3. Create sections for:\n   - New product introduction with storytelling\n   - Bestseller product curation\n   - Brand story preview\n   - Customer reviews\n4. Implement responsive footer with:\n   - Site map\n   - Contact information\n   - Social media links\n   - Newsletter subscription\n5. Ensure smooth animations using Framer Motion for transitions and scroll effects",
+        "testStrategy": "1. User testing for navigation usability\n2. Performance testing for image loading and animations\n3. Responsive design testing across devices\n4. A/B testing for hero section messaging\n5. Verify all links and navigation paths",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "in-progress",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Implement Product Catalog and Category Pages",
+        "description": "Develop the product catalog structure with category pages for skincare, makeup, and special care products as defined in the information architecture.",
+        "details": "1. Create product category pages with filtering options:\n   - Skincare (Cleanser, Toner, Serum, Moisturizer, Suncare)\n   - Makeup (Base, Point, Lip products)\n   - Special Care\n2. Implement filtering and sorting functionality:\n   - Filter by product type, concerns, ingredients\n   - Sort by price, popularity, newest\n3. Design product card components with:\n   - Product image\n   - Product name\n   - Brief description\n   - Price\n   - Rating\n4. Implement pagination or infinite scroll for product listings\n5. Create Redux slices for managing product catalog state\n6. Implement API integration with backend for fetching product data",
+        "testStrategy": "1. Test filtering and sorting functionality\n2. Verify product data is correctly displayed\n3. Performance testing for image loading\n4. Test pagination/infinite scroll behavior\n5. Verify responsive layout on different devices\n6. API integration tests",
+        "priority": "high",
+        "dependencies": [
+          2,
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Develop Product Detail Page",
+        "description": "Create the product detail page with comprehensive product information, usage guides, customer reviews, and related product recommendations.",
+        "details": "1. Design and implement product detail page layout with:\n   - Product image gallery with zoom functionality\n   - Product name, price, and add to cart options\n   - Detailed product description\n   - Ingredient information with visual infographics\n   - Usage guide with visual steps\n2. Implement customer review section:\n   - Rating system\n   - Photo reviews\n   - Detailed written reviews\n   - Review filtering options\n3. Create AI-based personalized product recommendation section\n4. Implement AR virtual try-on feature for makeup products using WebRTC + AR.js\n5. Add social sharing functionality\n6. Implement add to cart and wishlist functionality",
+        "testStrategy": "1. User testing for product information clarity\n2. Test AR functionality across different devices\n3. Verify review submission and display\n4. Test recommendation algorithm accuracy\n5. Performance testing for image gallery\n6. Verify add to cart and wishlist functionality",
+        "priority": "high",
+        "dependencies": [
+          2,
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Implement Brand Story and Content Pages",
+        "description": "Develop the brand story pages and content strategy implementation with storytelling elements that convey MICOZ's brand identity and philosophy.",
+        "details": "1. Create brand story pages with sections for:\n   - About MICOZ\n   - Brand Philosophy\n   - Sustainability\n2. Implement visual storytelling with:\n   - Parallax scrolling effects\n   - Animation sequences\n   - Interactive elements\n3. Develop beauty guide content pages:\n   - Skincare guides\n   - Makeup tutorials\n   - Product usage instructions\n4. Create content management system for:\n   - Beauty editorials\n   - Ingredient stories\n   - User stories\n   - Expert interviews\n5. Implement media-rich content display with optimized image loading",
+        "testStrategy": "1. Content review for brand alignment\n2. Performance testing for media-rich pages\n3. User testing for storytelling effectiveness\n4. Accessibility testing for all content\n5. Responsive design testing for content pages\n6. SEO testing for content discoverability",
+        "priority": "medium",
+        "dependencies": [
+          2,
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Implement User Authentication and Account Management",
+        "description": "Develop user authentication system with JWT and refresh tokens, along with comprehensive account management functionality.",
+        "details": "1. Implement authentication system:\n   - Registration with email verification\n   - Login with JWT + Refresh Token\n   - Social login options\n   - Password reset functionality\n2. Create user profile management:\n   - Personal information management\n   - Shipping address management\n   - Payment method storage (securely)\n   - Order history\n3. Implement personalization features:\n   - Skin type and concerns profile\n   - Product preferences\n   - Wishlist management\n4. Develop notification system:\n   - Order status updates\n   - Restock notifications\n   - Personalized product recommendations\n5. Implement privacy and data management in compliance with regulations",
+        "testStrategy": "1. Security testing for authentication system\n2. Test token refresh mechanism\n3. Verify email verification process\n4. Test user profile CRUD operations\n5. Verify password reset functionality\n6. Test notification delivery\n7. Perform data privacy compliance audit",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Implement Shopping Cart and Checkout Process",
+        "description": "Develop the shopping cart functionality and streamlined checkout process with multiple payment options and shipping integrations.",
+        "details": "1. Create shopping cart functionality:\n   - Add/remove products\n   - Update quantities\n   - Apply promotion codes\n   - Calculate totals and discounts\n2. Implement checkout process:\n   - Multi-step checkout with progress indicator\n   - Address selection/input\n   - Shipping method selection\n   - Payment method selection\n3. Integrate payment gateways:\n   - TossPayments\n   - KakaoPay\n   - NaverPay\n4. Implement shipping calculation and tracking:\n   - CJ Logistics API integration\n   - Lotte Logistics API integration\n5. Create order confirmation and tracking system\n6. Implement inventory management to prevent overselling",
+        "testStrategy": "1. Test complete purchase flow end-to-end\n2. Verify payment gateway integrations\n3. Test shipping calculation accuracy\n4. Verify inventory updates after purchase\n5. Test promotion code application\n6. Verify order confirmation emails\n7. Test order tracking functionality",
+        "priority": "high",
+        "dependencies": [
+          4,
+          5,
+          7
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Implement Community and Review System",
+        "description": "Develop the community features including product reviews, Q&A, and beauty tips sections to foster user engagement.",
+        "details": "1. Create product review system:\n   - Star rating mechanism\n   - Photo upload capability\n   - Text review with formatting options\n   - Helpful vote system\n   - Review moderation tools\n2. Implement Q&A functionality:\n   - Question submission\n   - Answer from staff and community\n   - Upvoting helpful answers\n   - Search within Q&A\n3. Develop beauty tips community:\n   - User-generated content submission\n   - Categorization and tagging\n   - Rich media support\n   - Social sharing\n4. Create notification system for community interactions\n5. Implement comment and discussion functionality",
+        "testStrategy": "1. Test review submission and display\n2. Verify photo upload in reviews\n3. Test Q&A submission and answering\n4. Verify community content moderation tools\n5. Test notification system for community interactions\n6. Verify social sharing functionality\n7. Performance testing for media-rich community content",
+        "priority": "medium",
+        "dependencies": [
+          5,
+          7
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Implement Search and Recommendation System",
+        "description": "Develop advanced search functionality with Elasticsearch and personalized product recommendation system using collaborative and content-based filtering.",
+        "details": "1. Implement Elasticsearch for product search:\n   - Configure indexing for products\n   - Implement autocomplete functionality\n   - Create filters for search results\n   - Support for Korean language search\n2. Develop recommendation system:\n   - Collaborative filtering based on user behavior\n   - Content-based filtering using product attributes\n   - Hybrid approach for best results\n3. Implement personalized recommendations:\n   - Based on browsing history\n   - Based on purchase history\n   - Based on skin type and concerns\n4. Create A/B testing framework for recommendation algorithms\n5. Implement analytics to track search and recommendation effectiveness",
+        "testStrategy": "1. Test search accuracy and performance\n2. Verify autocomplete functionality\n3. Test search filters\n4. Evaluate recommendation relevance\n5. Perform A/B testing on recommendation algorithms\n6. Test personalization accuracy\n7. Verify analytics data collection",
+        "priority": "medium",
+        "dependencies": [
+          4,
+          7
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-07-28T06:44:12.684Z",
+      "updated": "2025-07-29T07:55:54.819Z",
+      "description": "Tasks for master context"
+    }
+  }
+}
