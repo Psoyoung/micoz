@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled, { css } from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { toggleCart } from '../../store/cartSlice';
 
 export interface HeaderProps {
   className?: string;
@@ -31,6 +33,60 @@ const Nav = styled.nav`
   @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
     padding: 0 ${({ theme }) => theme.spacing[4]};
     height: 70px;
+  }
+`;
+
+const RightSection = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing[4]};
+`;
+
+const IconButton = styled(motion.button)`
+  position: relative;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: ${({ theme }) => theme.spacing[2]};
+  border-radius: ${({ theme }) => theme.borderRadius.full};
+  color: ${({ theme }) => theme.colors.secondary.charcoal};
+  transition: all ${({ theme }) => theme.transitions.fast};
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.gray[100]};
+    color: ${({ theme }) => theme.colors.primary.sage};
+  }
+`;
+
+const CartIcon = styled.div`
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+`;
+
+const Badge = styled.div`
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: ${({ theme }) => theme.colors.accent.softCoral};
+  color: white;
+  border-radius: ${({ theme }) => theme.borderRadius.full};
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: ${({ theme }) => theme.typography.fontSize.xs};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  min-width: 18px;
+`;
+
+const UserButton = styled(IconButton)`
+  @media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
+    display: none;
   }
 `;
 
@@ -233,6 +289,10 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  
+  const { itemCount } = useAppSelector(state => state.cart);
+  const { itemCount: wishlistCount } = useAppSelector(state => state.wishlist);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -240,6 +300,10 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
 
   const handleDropdownToggle = (label: string) => {
     setActiveDropdown(activeDropdown === label ? null : label);
+  };
+
+  const handleCartToggle = () => {
+    dispatch(toggleCart());
   };
 
   return (
@@ -305,9 +369,43 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
           ))}
         </NavList>
 
-        <MobileMenuButton onClick={toggleMenu}>
-          <HamburgerIcon isOpen={isMenuOpen} />
-        </MobileMenuButton>
+        <RightSection>
+          {/* 위시리스트 버튼 */}
+          <IconButton
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => navigate('/wishlist')}
+            title="위시리스트"
+          >
+            <CartIcon>♡</CartIcon>
+            {wishlistCount > 0 && <Badge>{wishlistCount}</Badge>}
+          </IconButton>
+
+          {/* 장바구니 버튼 */}
+          <IconButton
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleCartToggle}
+            title="장바구니"
+          >
+            <CartIcon>🛒</CartIcon>
+            {itemCount > 0 && <Badge>{itemCount}</Badge>}
+          </IconButton>
+
+          {/* 사용자 메뉴 */}
+          <UserButton
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => navigate('/profile')}
+            title="마이페이지"
+          >
+            <CartIcon>👤</CartIcon>
+          </UserButton>
+
+          <MobileMenuButton onClick={toggleMenu}>
+            <HamburgerIcon isOpen={isMenuOpen} />
+          </MobileMenuButton>
+        </RightSection>
       </Nav>
     </HeaderContainer>
   );

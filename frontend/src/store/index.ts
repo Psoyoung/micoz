@@ -1,8 +1,17 @@
 import { configureStore } from '@reduxjs/toolkit';
+import cartReducer from './cartSlice';
+import wishlistReducer from './wishlistSlice';
+import toastReducer from './toastSlice';
+import checkoutReducer from './checkoutSlice';
+import addressReducer from './addressSlice';
 
 export const store = configureStore({
   reducer: {
-    // Add reducers here
+    cart: cartReducer,
+    wishlist: wishlistReducer,
+    toast: toastReducer,
+    checkout: checkoutReducer,
+    address: addressReducer,
   },
 });
 
