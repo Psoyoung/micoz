@@ -3,82 +3,296 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model User {
   id          String   @id @default(cuid())
   email       String   @unique
-  username    String   @unique
-  displayName String
+  firstName   String
+  lastName    String
+  phone       String?
   password    String
   avatar      String?
-  bio         String?
   verified    Boolean  @default(false)
+  birthDate   DateTime?
+  gender      Gender?
+  
+  // Email verification
+  emailVerificationToken String?
+  emailVerificationExpires DateTime?
+  
+  // Password reset
+  passwordResetToken String?
+  passwordResetExpires DateTime?
+  
+  // Beauty profile
+  skinType    SkinType?
+  skinConcerns String? // JSON string of concerns array
+  
+  // Preferences
+  newsletterSubscribed Boolean @default(false)
+  marketingConsent Boolean @default(false)
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  lastLoginAt DateTime?
 
-  posts     Post[]
-  comments  Comment[]
-  likes     Like[]
-  follows   Follow[] @relation("UserFollows")
-  followers Follow[] @relation("UserFollowers")
+  addresses     Address[]
+  orders        Order[]
+  reviews       Review[]
+  wishlistItems WishlistItem[]
+  paymentMethods PaymentMethod[]
 
   @@map("users")
 }
 
-model Post {
-  id           String   @id @default(cuid())
-  content      String
-  imageUrl     String?
-  authorId     String
-  likesCount   Int      @default(0)
-  commentsCount Int     @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  author   User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  comments Comment[]
-  likes    Like[]
-
-  @@map("posts")
-}
-
-model Comment {
-  id        String   @id @default(cuid())
-  content   String
-  postId    String
-  authorId  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
-  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
-
-  @@map("comments")
-}
-
-model Like {
-  id     String @id @default(cuid())
-  userId String
-  postId String
+model Address {
+  id          String   @id @default(cuid())
+  userId      String
+  firstName   String
+  lastName    String
+  company     String?
+  address1    String
+  address2    String?
+  city        String
+  state       String
+  zipCode     String
+  country     String   @default("KR")
+  phone       String?
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  orders Order[]
 
-  @@unique([userId, postId])
-  @@map("likes")
+  @@map("addresses")
 }
 
-model Follow {
-  id          String @id @default(cuid())
-  followerId  String
-  followingId String
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  shortDescription String?
+  price       Int      // in cents
+  compareAtPrice Int?   // original price for discounts
+  sku         String   @unique
+  barcode     String?
+  
+  // Product details
+  category    String
+  subCategory String?
+  brand       String   @default("MICOZ")
+  ingredients String? // JSON string of ingredients array
+  usage       String?
+  
+  // Inventory
+  inventory   Int      @default(0)
+  trackInventory Boolean @default(true)
+  
+  // SEO & Display
+  slug        String   @unique
+  images      String? // JSON string of image URLs array
+  featured    Boolean  @default(false)
+  isNew       Boolean  @default(false)
+  isBestseller Boolean @default(false)
+  
+  // Status
+  status      ProductStatus @default(ACTIVE)
+  publishedAt DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  follower  User @relation("UserFollows", fields: [followerId], references: [id], onDelete: Cascade)
-  following User @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+  orderItems    OrderItem[]
+  reviews       Review[]
+  wishlistItems WishlistItem[]
+  variants      ProductVariant[]
 
-  @@unique([followerId, followingId])
-  @@map("follows")
+  @@map("products")
+}
+
+model ProductVariant {
+  id        String @id @default(cuid())
+  productId String
+  name      String // e.g., "50ml", "100ml", "Light", "Medium"
+  sku       String @unique
+  price     Int    // in cents
+  inventory Int    @default(0)
+  position  Int    @default(0)
+  
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+
+  @@map("product_variants")
+}
+
+model Order {
+  id          String   @id @default(cuid())
+  userId      String
+  orderNumber String   @unique
+  
+  // Pricing
+  subtotal    Int      // in cents
+  taxAmount   Int      @default(0)
+  shippingCost Int     @default(0)
+  discountAmount Int   @default(0)
+  totalAmount Int
+  
+  // Status
+  status      OrderStatus @default(PENDING)
+  paymentStatus PaymentStatus @default(PENDING)
+  fulfillmentStatus FulfillmentStatus @default(UNFULFILLED)
+  
+  // Shipping
+  addressId   String
+  shippingMethod String?
+  trackingNumber String?
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  shippedAt   DateTime?
+  deliveredAt DateTime?
+
+  user        User        @relation(fields: [userId], references: [id])
+  address     Address     @relation(fields: [addressId], references: [id])
+  orderItems  OrderItem[]
+  payments    Payment[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id              String @id @default(cuid())
+  orderId         String
+  productId       String
+  variantId       String?
+  quantity        Int
+  price           Int    // price at time of purchase
+  
+  order    Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product  Product         @relation(fields: [productId], references: [id])
+  variant  ProductVariant? @relation(fields: [variantId], references: [id])
+
+  @@map("order_items")
+}
+
+model Payment {
+  id            String @id @default(cuid())
+  orderId       String
+  amount        Int    // in cents
+  currency      String @default("KRW")
+  paymentMethod String // "card", "bank_transfer", "kakao_pay", etc.
+  status        PaymentStatus @default(PENDING)
+  transactionId String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+model PaymentMethod {
+  id       String @id @default(cuid())
+  userId   String
+  type     String // "card", "bank_account"
+  provider String // "visa", "mastercard", "kb", etc.
+  last4    String
+  isDefault Boolean @default(false)
+  
+  // Encrypted payment details would be stored securely
+  encryptedData String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("payment_methods")
+}
+
+model Review {
+  id        String @id @default(cuid())
+  userId    String
+  productId String
+  rating    Int    // 1-5
+  title     String?
+  comment   String
+  images    String? // JSON string of image URLs array
+  verified  Boolean @default(false) // verified purchase
+  helpful   Int @default(0)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId]) // One review per user per product
+  @@map("reviews")
+}
+
+model WishlistItem {
+  id        String @id @default(cuid())
+  userId    String
+  productId String
+  
+  createdAt DateTime @default(now())
+  
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@map("wishlist_items")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+enum SkinType {
+  OILY
+  DRY
+  COMBINATION
+  SENSITIVE
+  NORMAL
+}
+
+enum ProductStatus {
+  ACTIVE
+  DRAFT
+  ARCHIVED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum FulfillmentStatus {
+  UNFULFILLED
+  PARTIAL
+  FULFILLED
+  RETURNED
 }

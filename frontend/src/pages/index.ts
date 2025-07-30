@@ -1,0 +1,7 @@
+export { HomePage } from './HomePage';
+export { ProductCategoryPage } from './ProductCategoryPage';
+export { SkincareCategory } from './SkincareCategory';
+export { MakeupCategory } from './MakeupCategory';
+export { BodycareCategory } from './BodycareCategory';
+export { FragranceCategory } from './FragranceCategory';
+export { ProductDetailPage } from './ProductDetailPage';

@@ -1,7 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
-import { Card } from '../Card';
 import { Button } from '../Button';
 
 export interface Product {
@@ -224,7 +223,7 @@ const itemVariants = {
     opacity: 1,
     transition: {
       duration: 0.6,
-      ease: 'easeOut',
+      ease: "easeOut" as const,
     },
   },
 };

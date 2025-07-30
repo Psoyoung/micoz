@@ -8,7 +8,9 @@ export interface CheckboxProps {
   disabled?: boolean;
   size?: 'small' | 'medium' | 'large';
   error?: boolean;
-  onChange?: (checked: boolean) => void;
+  name?: string;
+  id?: string;
+  onChange?: ((checked: boolean) => void) | ((e: React.ChangeEvent<HTMLInputElement>) => void);
   className?: string;
 }
 
@@ -184,7 +186,12 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
   ) => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (onChange) {
-        onChange(e.target.checked);
+        // Check if onChange expects an event or just a boolean
+        if (onChange.length > 1 || onChange.toString().includes('target')) {
+          (onChange as (e: React.ChangeEvent<HTMLInputElement>) => void)(e);
+        } else {
+          (onChange as (checked: boolean) => void)(e.target.checked);
+        }
       }
     };
 

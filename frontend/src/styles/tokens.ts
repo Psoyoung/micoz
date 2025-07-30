@@ -33,6 +33,12 @@ export const colors = {
     800: '#2B2B2B',
     900: '#1A1A1A',
   },
+  green: {
+    600: '#087f5b',
+  },
+  red: {
+    600: '#e03131',
+  },
 } as const;
 
 export const typography = {

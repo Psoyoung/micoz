@@ -24,7 +24,7 @@ export const generateAccessToken = (payload: JWTPayload): string => {
   
   return jwt.sign(payload, secret, {
     expiresIn: process.env.JWT_EXPIRES_IN || '1h',
-  });
+  } as jwt.SignOptions);
 };
 
 export const generateRefreshToken = (payload: JWTPayload): string => {
@@ -35,7 +35,7 @@ export const generateRefreshToken = (payload: JWTPayload): string => {
   
   return jwt.sign(payload, secret, {
     expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
-  });
+  } as jwt.SignOptions);
 };
 
 export const verifyAccessToken = (token: string): JWTPayload => {

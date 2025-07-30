@@ -1,4 +1,4 @@
-import React, { forwardRef, useState } from 'react';
+import React, { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
 
 export interface SelectOption {
@@ -10,7 +10,7 @@ export interface SelectOption {
 export interface SelectProps {
   label?: string;
   placeholder?: string;
-  options: SelectOption[];
+  options?: SelectOption[];
   size?: 'small' | 'medium' | 'large';
   variant?: 'default' | 'filled' | 'outlined';
   error?: boolean;
@@ -19,8 +19,11 @@ export interface SelectProps {
   required?: boolean;
   fullWidth?: boolean;
   value?: string;
-  onChange?: (value: string) => void;
+  name?: string;
+  id?: string;
+  onChange?: ((value: string) => void) | ((e: React.ChangeEvent<HTMLSelectElement>) => void);
   className?: string;
+  children?: React.ReactNode;
 }
 
 const SelectContainer = styled.div<{ fullWidth?: boolean }>`
@@ -171,13 +174,19 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
       value,
       onChange,
       className,
+      children,
       ...props
     },
     ref
   ) => {
     const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
       if (onChange) {
-        onChange(e.target.value);
+        // Check if onChange expects an event or just a value
+        if (onChange.length > 1 || onChange.toString().includes('target')) {
+          (onChange as (e: React.ChangeEvent<HTMLSelectElement>) => void)(e);
+        } else {
+          (onChange as (value: string) => void)(e.target.value);
+        }
       }
     };
 
@@ -200,7 +209,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
               {placeholder}
             </option>
           )}
-          {options.map((option) => (
+          {children ? children : options?.map((option) => (
             <option
               key={option.value}
               value={option.value}

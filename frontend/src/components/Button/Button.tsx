@@ -8,9 +8,10 @@ export interface ButtonProps {
   loading?: boolean;
   fullWidth?: boolean;
   children: React.ReactNode;
-  onClick?: () => void;
+  onClick?: (e?: React.MouseEvent<HTMLButtonElement>) => void;
   type?: 'button' | 'submit' | 'reset';
   className?: string;
+  style?: React.CSSProperties;
 }
 
 const StyledButton = styled.button<ButtonProps>`

@@ -4,7 +4,7 @@ import styled, { css } from 'styled-components';
 export interface InputProps {
   label?: string;
   placeholder?: string;
-  type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url';
+  type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'date';
   size?: 'small' | 'medium' | 'large';
   variant?: 'default' | 'filled' | 'outlined';
   error?: boolean;
@@ -13,6 +13,8 @@ export interface InputProps {
   required?: boolean;
   fullWidth?: boolean;
   value?: string;
+  name?: string;
+  id?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;

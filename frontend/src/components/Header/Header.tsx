@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import styled, { css } from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -78,7 +79,7 @@ const NavItem = styled.li`
   position: relative;
 `;
 
-const NavLink = styled(motion.a)`
+const NavLink = styled(motion(Link))`
   font-family: ${({ theme }) => theme.typography.fontFamily.primary.korean};
   font-size: ${({ theme }) => theme.typography.fontSize.base};
   font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
@@ -138,7 +139,7 @@ const DropdownMenu = styled(motion.div)`
   }
 `;
 
-const DropdownItem = styled(motion.a)`
+const DropdownItem = styled(motion(Link))`
   display: block;
   padding: ${({ theme }) => theme.spacing[3]} ${({ theme }) => theme.spacing[4]};
   color: ${({ theme }) => theme.colors.secondary.charcoal};
@@ -216,10 +217,10 @@ const navigationItems = [
     label: '제품',
     href: '/products',
     dropdown: [
-      { label: '스킨케어', href: '/products/skincare' },
-      { label: '메이크업', href: '/products/makeup' },
-      { label: '바디케어', href: '/products/bodycare' },
-      { label: '향수', href: '/products/fragrance' },
+      { label: '스킨케어', href: '/skincare' },
+      { label: '메이크업', href: '/makeup' },
+      { label: '바디케어', href: '/bodycare' },
+      { label: '향수', href: '/fragrance' },
     ],
   },
   { label: '컬렉션', href: '/collections' },
@@ -231,6 +232,7 @@ const navigationItems = [
 export const Header: React.FC<HeaderProps> = ({ className }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -249,6 +251,7 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
     >
       <Nav>
         <Logo
+          onClick={() => navigate('/')}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
@@ -278,8 +281,9 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
                         {item.dropdown.map((dropdownItem) => (
                           <DropdownItem
                             key={dropdownItem.label}
-                            href={dropdownItem.href}
+                            to={dropdownItem.href}
                             whileHover={{ x: 4 }}
+                            onClick={() => setActiveDropdown(null)}
                           >
                             {dropdownItem.label}
                           </DropdownItem>
@@ -290,7 +294,7 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
                 </DropdownContainer>
               ) : (
                 <NavLink
-                  href={item.href}
+                  to={item.href}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
