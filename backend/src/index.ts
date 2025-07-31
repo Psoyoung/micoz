@@ -5,6 +5,10 @@ import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 import authRoutes from './routes/auth';
 import productRoutes from './routes/product';
+import reviewRoutes from './routes/review';
+import qaRoutes from './routes/qa';
+import beautyTipsRoutes from './routes/beautyTips';
+import commentsRoutes from './routes/comments';
 
 dotenv.config();
 
@@ -40,6 +44,10 @@ app.get('/api', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api', productRoutes);
+app.use('/api', reviewRoutes);
+app.use('/api', qaRoutes);
+app.use('/api', beautyTipsRoutes);
+app.use('/api', commentsRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
