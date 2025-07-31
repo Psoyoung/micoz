@@ -195,6 +195,20 @@ export const ShippingInfo: React.FC = () => {
     }
   }, [addresses, selectedAddress, dispatch]);
 
+  // 기본 배송 방법을 자동으로 선택
+  useEffect(() => {
+    if (!selectedShippingMethod && shippingMethods.length > 0) {
+      // 무료배송 가능하면 무료배송, 아니면 일반배송 선택
+      let defaultMethod: ShippingMethod;
+      if (total >= 50000) {
+        defaultMethod = shippingMethods.find(method => method.id === 'free') || shippingMethods[0];
+      } else {
+        defaultMethod = shippingMethods.find(method => method.id === 'standard') || shippingMethods[0];
+      }
+      dispatch(setSelectedShippingMethod(defaultMethod));
+    }
+  }, [shippingMethods, selectedShippingMethod, total, dispatch]);
+
   const handleAddressSelect = (address: Address) => {
     dispatch(setSelectedAddress(address));
   };

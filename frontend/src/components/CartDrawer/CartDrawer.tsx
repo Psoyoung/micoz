@@ -7,7 +7,9 @@ import {
   closeCart, 
   removeFromCart, 
   updateQuantity, 
-  clearCart 
+  clearCart,
+  applyPromotionCode,
+  removePromotionCode 
 } from '../../store/cartSlice';
 import { Button } from '../Button';
 
@@ -278,6 +280,80 @@ const ClearCartButton = styled.button`
   }
 `;
 
+const PromotionSection = styled.div`
+  padding: ${({ theme }) => theme.spacing[4]};
+  background: ${({ theme }) => theme.colors.gray[50]};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  margin-bottom: ${({ theme }) => theme.spacing[4]};
+`;
+
+const PromotionInput = styled.div`
+  display: flex;
+  gap: ${({ theme }) => theme.spacing[2]};
+  margin-bottom: ${({ theme }) => theme.spacing[2]};
+`;
+
+const PromotionCodeInput = styled.input`
+  flex: 1;
+  padding: ${({ theme }) => theme.spacing[3]};
+  border: 1px solid ${({ theme }) => theme.colors.gray[300]};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  
+  &:focus {
+    outline: none;
+    border-color: ${({ theme }) => theme.colors.primary.sage};
+    box-shadow: 0 0 0 2px ${({ theme }) => theme.colors.primary.sage}20;
+  }
+`;
+
+const ApplyButton = styled.button`
+  padding: ${({ theme }) => theme.spacing[3]} ${({ theme }) => theme.spacing[4]};
+  background: ${({ theme }) => theme.colors.primary.sage};
+  color: white;
+  border: none;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+  cursor: pointer;
+  transition: all ${({ theme }) => theme.transitions.fast};
+  
+  &:hover {
+    background: ${({ theme }) => theme.colors.primary.deepForest};
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const PromotionStatus = styled.div<{ $isError?: boolean }>`
+  padding: ${({ theme }) => theme.spacing[2]};
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  background: ${({ theme, $isError }) => 
+    $isError ? theme.colors.red[50] : theme.colors.green[50]};
+  color: ${({ theme, $isError }) => 
+    $isError ? theme.colors.red[600] : theme.colors.green[600]};
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const RemovePromotionButton = styled.button`
+  background: none;
+  border: none;
+  color: ${({ theme }) => theme.colors.green[600]};
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+  
+  &:hover {
+    opacity: 0.7;
+  }
+`;
+
 const formatPrice = (price: number): string => {
   return `₩${price.toLocaleString()}`;
 };
@@ -285,7 +361,8 @@ const formatPrice = (price: number): string => {
 export const CartDrawer: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { isOpen, items, total, itemCount } = useAppSelector(state => state.cart);
+  const { isOpen, items, total, subtotal, discount, shipping, itemCount, promotionCode } = useAppSelector(state => state.cart);
+  const [promotionCodeInput, setPromotionCodeInput] = React.useState('');
 
   const handleClose = () => {
     dispatch(closeCart());
@@ -312,9 +389,35 @@ export const CartDrawer: React.FC = () => {
     navigate('/checkout');
   };
 
-  const subtotal = total;
-  const shipping = subtotal >= 50000 ? 0 : 3000; // 5만원 이상 무료배송
-  const finalTotal = subtotal + shipping;
+  const handleApplyPromotionCode = () => {
+    if (!promotionCodeInput.trim()) return;
+    
+    // Mock promotion codes for demo
+    const mockPromotionCodes = {
+      'WELCOME10': { code: 'WELCOME10', type: 'percentage' as const, value: 10, isValid: true },
+      'SAVE5000': { code: 'SAVE5000', type: 'fixed' as const, value: 5000, isValid: true },
+      'VIP20': { code: 'VIP20', type: 'percentage' as const, value: 20, minOrderAmount: 100000, maxDiscount: 20000, isValid: true },
+    };
+    
+    const promoCode = mockPromotionCodes[promotionCodeInput.toUpperCase() as keyof typeof mockPromotionCodes];
+    
+    if (promoCode) {
+      dispatch(applyPromotionCode(promoCode));
+      setPromotionCodeInput('');
+    } else {
+      dispatch(applyPromotionCode({
+        code: promotionCodeInput,
+        type: 'percentage',
+        value: 0,
+        isValid: false,
+        errorMessage: '유효하지 않은 쿠폰 코드입니다.',
+      }));
+    }
+  };
+
+  const handleRemovePromotionCode = () => {
+    dispatch(removePromotionCode());
+  };
 
   return (
     <AnimatePresence>
@@ -401,10 +504,52 @@ export const CartDrawer: React.FC = () => {
 
             {items.length > 0 && (
               <CartSummary>
+                <PromotionSection>
+                  {!promotionCode || !promotionCode.isValid ? (
+                    <PromotionInput>
+                      <PromotionCodeInput
+                        type="text"
+                        placeholder="쿠폰 코드를 입력하세요"
+                        value={promotionCodeInput}
+                        onChange={(e) => setPromotionCodeInput(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && handleApplyPromotionCode()}
+                      />
+                      <ApplyButton
+                        onClick={handleApplyPromotionCode}
+                        disabled={!promotionCodeInput.trim()}
+                      >
+                        적용
+                      </ApplyButton>
+                    </PromotionInput>
+                  ) : null}
+                  
+                  {promotionCode && (
+                    <PromotionStatus $isError={!promotionCode.isValid}>
+                      <span>
+                        {promotionCode.isValid 
+                          ? `쿠폰 ${promotionCode.code} 적용됨`
+                          : promotionCode.errorMessage
+                        }
+                      </span>
+                      {promotionCode.isValid && (
+                        <RemovePromotionButton onClick={handleRemovePromotionCode}>
+                          ×
+                        </RemovePromotionButton>
+                      )}
+                    </PromotionStatus>
+                  )}
+                </PromotionSection>
+
                 <SummaryRow>
                   <SummaryLabel>상품금액</SummaryLabel>
                   <SummaryValue>{formatPrice(subtotal)}</SummaryValue>
                 </SummaryRow>
+                {discount > 0 && (
+                  <SummaryRow>
+                    <SummaryLabel>할인금액</SummaryLabel>
+                    <SummaryValue style={{ color: '#ef4444' }}>-{formatPrice(discount)}</SummaryValue>
+                  </SummaryRow>
+                )}
                 <SummaryRow>
                   <SummaryLabel>배송비</SummaryLabel>
                   <SummaryValue>
@@ -413,7 +558,7 @@ export const CartDrawer: React.FC = () => {
                 </SummaryRow>
                 <TotalRow>
                   <TotalLabel>총 결제금액</TotalLabel>
-                  <TotalValue>{formatPrice(finalTotal)}</TotalValue>
+                  <TotalValue>{formatPrice(total)}</TotalValue>
                 </TotalRow>
                 
                 <ActionButtons>
@@ -423,7 +568,7 @@ export const CartDrawer: React.FC = () => {
                     fullWidth
                     onClick={handleCheckout}
                   >
-                    주문하기 ({formatPrice(finalTotal)})
+                    주문하기 ({formatPrice(total)})
                   </Button>
                   <ClearCartButton onClick={handleClearCart}>
                     장바구니 비우기

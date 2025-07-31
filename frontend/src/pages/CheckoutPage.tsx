@@ -4,12 +4,15 @@ import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { nextStep, prevStep, setStep, resetCheckout } from '../store/checkoutSlice';
+import { processPayment, resetPayment } from '../store/paymentSlice';
+import { clearCart } from '../store/cartSlice';
 
 // 단계별 컴포넌트들 (아래에서 구현)
 import { CartReview } from '../components/Checkout/CartReview';
 import { ShippingInfo } from '../components/Checkout/ShippingInfo';
 import { PaymentMethod } from '../components/Checkout/PaymentMethod';
 import { OrderComplete } from '../components/Checkout/OrderComplete';
+import { OrderSummary } from '../components/Checkout/OrderSummary';
 
 const PageContainer = styled.div`
   min-height: 100vh;
@@ -154,15 +157,7 @@ const MainContent = styled(motion.div)`
 `;
 
 const SidebarContent = styled.div`
-  background: white;
-  border-radius: ${({ theme }) => theme.borderRadius.xl};
-  box-shadow: ${({ theme }) => theme.shadows.base};
-  padding: ${({ theme }) => theme.spacing[6]};
-  position: sticky;
-  top: 100px;
-
   @media (max-width: ${({ theme }) => theme.breakpoints.lg}) {
-    position: static;
     order: -1;
   }
 `;
@@ -224,6 +219,7 @@ export const CheckoutPage: React.FC = () => {
   
   const { items, itemCount } = useAppSelector(state => state.cart);
   const { currentStep, steps, isProcessing } = useAppSelector(state => state.checkout);
+  const { isProcessing: isPaymentProcessing, paymentStatus, currentOrder } = useAppSelector(state => state.payment);
 
   // 장바구니가 비어있으면 홈으로 리다이렉트
   useEffect(() => {
@@ -248,8 +244,22 @@ export const CheckoutPage: React.FC = () => {
     }
   };
 
-  const handleNext = () => {
-    dispatch(nextStep());
+  const handleNext = async () => {
+    if (currentStep === steps.length - 2) {
+      // 마지막 단계에서 결제 처리
+      try {
+        const result = await dispatch(processPayment()).unwrap();
+        if (result) {
+          dispatch(nextStep()); // 결제 완료 페이지로 이동
+          dispatch(clearCart()); // 장바구니 비우기
+        }
+      } catch (error) {
+        console.error('Payment failed:', error);
+        // 에러는 PaymentMethod 컴포넌트에서 표시됨
+      }
+    } else {
+      dispatch(nextStep());
+    }
   };
 
   const handlePrev = () => {
@@ -259,6 +269,7 @@ export const CheckoutPage: React.FC = () => {
   const handleCancel = () => {
     if (window.confirm('주문을 취소하시겠습니까?')) {
       dispatch(resetCheckout());
+      dispatch(resetPayment());
       navigate('/');
     }
   };
@@ -281,15 +292,17 @@ export const CheckoutPage: React.FC = () => {
 
   // 다음 버튼 활성화 조건
   const canProceed = () => {
+    const { selectedAddress, selectedShippingMethod, selectedPaymentMethod } = useAppSelector(state => state.checkout);
+    
     switch (currentStep) {
       case 0:
         return items.length > 0;
       case 1:
         // 배송지와 배송방법이 선택되었는지 확인
-        return true; // 임시로 true, 실제로는 주소 선택 확인
+        return selectedAddress !== null && selectedShippingMethod !== null;
       case 2:
         // 결제방법이 선택되었는지 확인
-        return true; // 임시로 true, 실제로는 결제방법 선택 확인
+        return selectedPaymentMethod !== null;
       case 3:
         return false; // 마지막 단계
       default:
@@ -359,9 +372,10 @@ export const CheckoutPage: React.FC = () => {
                 <NavButton
                   variant="primary"
                   onClick={handleNext}
-                  disabled={!canProceed() || isProcessing}
+                  disabled={!canProceed() || isProcessing || isPaymentProcessing}
                 >
-                  {isProcessing ? '처리 중...' : 
+                  {isPaymentProcessing ? '결제 처리 중...' :
+                   isProcessing ? '처리 중...' : 
                    currentStep === steps.length - 2 ? '결제하기' : '다음 단계'}
                 </NavButton>
               </NavigationButtons>
@@ -370,8 +384,7 @@ export const CheckoutPage: React.FC = () => {
           
           {/* 주문 요약 사이드바 */}
           <SidebarContent>
-            {/* TODO: 주문 요약 컴포넌트 */}
-            <div>주문 요약</div>
+            <OrderSummary />
           </SidebarContent>
         </ContentContainer>
       </Container>

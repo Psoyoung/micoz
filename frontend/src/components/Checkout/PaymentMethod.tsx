@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { setSelectedPaymentMethod, setOrderNote } from '../../store/checkoutSlice';
+import { clearError } from '../../store/paymentSlice';
 import type { PaymentMethod as PaymentMethodType } from '../../store/checkoutSlice';
 
 const Container = styled.div`
@@ -176,6 +177,96 @@ const AgreementList = styled.ul`
   }
 `;
 
+const ErrorSection = styled(motion.div)`
+  background: ${({ theme }) => theme.colors.red[50]};
+  border: 1px solid ${({ theme }) => theme.colors.red[200]};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: ${({ theme }) => theme.spacing[4]};
+  margin-top: ${({ theme }) => theme.spacing[4]};
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing[3]};
+`;
+
+const ErrorIcon = styled.div`
+  color: ${({ theme }) => theme.colors.red[500]};
+  font-size: 20px;
+  flex-shrink: 0;
+`;
+
+const ErrorContent = styled.div`
+  flex: 1;
+`;
+
+const ErrorTitle = styled.div`
+  font-size: ${({ theme }) => theme.typography.fontSize.base};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+  color: ${({ theme }) => theme.colors.red[700]};
+  margin-bottom: ${({ theme }) => theme.spacing[1]};
+`;
+
+const ErrorMessage = styled.div`
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  color: ${({ theme }) => theme.colors.red[600]};
+`;
+
+const ErrorDismiss = styled.button`
+  background: none;
+  border: none;
+  color: ${({ theme }) => theme.colors.red[500]};
+  cursor: pointer;
+  padding: ${({ theme }) => theme.spacing[1]};
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  
+  &:hover {
+    background: ${({ theme }) => theme.colors.red[100]};
+  }
+`;
+
+const ProcessingOverlay = styled(motion.div)`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+`;
+
+const ProcessingCard = styled(motion.div)`
+  background: white;
+  border-radius: ${({ theme }) => theme.borderRadius.xl};
+  padding: ${({ theme }) => theme.spacing[8]};
+  text-align: center;
+  box-shadow: ${({ theme }) => theme.shadows.xl};
+  min-width: 300px;
+`;
+
+const ProcessingSpinner = styled(motion.div)`
+  width: 60px;
+  height: 60px;
+  border: 4px solid ${({ theme }) => theme.colors.gray[200]};
+  border-top: 4px solid ${({ theme }) => theme.colors.primary.sage};
+  border-radius: 50%;
+  margin: 0 auto ${({ theme }) => theme.spacing[4]};
+`;
+
+const ProcessingTitle = styled.h3`
+  font-size: ${({ theme }) => theme.typography.fontSize.xl};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  color: ${({ theme }) => theme.colors.primary.deepForest};
+  margin-bottom: ${({ theme }) => theme.spacing[2]};
+`;
+
+const ProcessingMessage = styled.p`
+  font-size: ${({ theme }) => theme.typography.fontSize.base};
+  color: ${({ theme }) => theme.colors.secondary.charcoal};
+  margin: 0;
+`;
+
 const formatPrice = (price: number): string => {
   return `₩${price.toLocaleString()}`;
 };
@@ -197,6 +288,7 @@ export const PaymentMethod: React.FC = () => {
     orderNote
   } = useAppSelector(state => state.checkout);
   const { total, itemCount } = useAppSelector(state => state.cart);
+  const { isProcessing, error } = useAppSelector(state => state.payment);
   
   const [localOrderNote, setLocalOrderNote] = useState(orderNote);
 
@@ -208,6 +300,10 @@ export const PaymentMethod: React.FC = () => {
     const note = e.target.value;
     setLocalOrderNote(note);
     dispatch(setOrderNote(note));
+  };
+
+  const handleErrorDismiss = () => {
+    dispatch(clearError());
   };
 
   // 총 결제 금액 계산
@@ -282,6 +378,45 @@ export const PaymentMethod: React.FC = () => {
           <li>무통장입금 선택 시 입금 확인 후 배송이 시작됩니다.</li>
         </AgreementList>
       </AgreementSection>
+
+      {error && (
+        <ErrorSection
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+        >
+          <ErrorIcon>⚠️</ErrorIcon>
+          <ErrorContent>
+            <ErrorTitle>결제 처리 중 오류가 발생했습니다</ErrorTitle>
+            <ErrorMessage>{error}</ErrorMessage>
+          </ErrorContent>
+          <ErrorDismiss onClick={handleErrorDismiss}>×</ErrorDismiss>
+        </ErrorSection>
+      )}
+
+      {isProcessing && (
+        <ProcessingOverlay
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <ProcessingCard
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            exit={{ scale: 0.8 }}
+          >
+            <ProcessingSpinner
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            />
+            <ProcessingTitle>결제 처리 중</ProcessingTitle>
+            <ProcessingMessage>
+              잠시만 기다려주세요.<br />
+              결제가 진행 중입니다.
+            </ProcessingMessage>
+          </ProcessingCard>
+        </ProcessingOverlay>
+      )}
     </Container>
   );
 };

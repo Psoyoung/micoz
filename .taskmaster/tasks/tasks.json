@@ -186,7 +186,7 @@
           2,
           3
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -214,8 +214,62 @@
           5,
           7
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Shopping Cart State Management and Core Functionality",
+            "description": "Create the shopping cart data structure, state management, and core operations for adding, removing, and updating cart items with quantity management.",
+            "dependencies": [],
+            "details": "Implement cart state using React Context or Redux with actions for addToCart, removeFromCart, updateQuantity, and clearCart. Create cart data structure to store product ID, variant info, quantity, and pricing. Include cart persistence using localStorage. Implement cart item validation and quantity limits based on inventory.",
+            "status": "done",
+            "testStrategy": "Unit tests for cart operations, state persistence tests, and edge cases like adding out-of-stock items"
+          },
+          {
+            "id": 2,
+            "title": "Build Shopping Cart UI and Promotion Code System",
+            "description": "Develop the shopping cart interface with item display, quantity controls, promotion code input, and dynamic total calculations with discounts.",
+            "dependencies": [
+              "8.1"
+            ],
+            "details": "Create cart page/drawer component displaying cart items with product images, names, prices, and quantity controls. Implement promotion code input field with validation and discount application logic. Build dynamic pricing calculation showing subtotal, discounts, shipping, and final total. Include empty cart state and cart item removal confirmations.",
+            "status": "done",
+            "testStrategy": "UI component tests, promotion code validation tests, and calculation accuracy verification"
+          },
+          {
+            "id": 3,
+            "title": "Develop Multi-Step Checkout Process with Progress Tracking",
+            "description": "Create a streamlined multi-step checkout flow with progress indicators, address management, and shipping method selection.",
+            "dependencies": [
+              "8.2"
+            ],
+            "details": "Build checkout stepper component with steps: Cart Review → Shipping Info → Payment → Confirmation. Implement address form with validation for Korean addresses, saved address selection, and new address creation. Create shipping method selection with delivery options and cost calculations. Include checkout progress persistence and back/forward navigation.",
+            "status": "done",
+            "testStrategy": "End-to-end checkout flow testing, address validation tests, and navigation state management verification"
+          },
+          {
+            "id": 4,
+            "title": "Integrate Payment Gateways (TossPayments, KakaoPay, NaverPay)",
+            "description": "Implement secure payment processing with multiple Korean payment gateway integrations and payment method selection interface.",
+            "dependencies": [
+              "8.3"
+            ],
+            "details": "Integrate TossPayments SDK for card payments with PCI compliance. Implement KakaoPay and NaverPay APIs for alternative payment methods. Create payment method selection UI with secure card form or redirect flows. Handle payment success/failure callbacks, error handling, and payment verification. Implement payment retry logic and timeout handling.",
+            "status": "done",
+            "testStrategy": "Payment gateway integration tests, security validation, error handling tests, and payment flow end-to-end testing"
+          },
+          {
+            "id": 5,
+            "title": "Implement Order Management, Shipping Integration, and Inventory Control",
+            "description": "Create order confirmation system, integrate shipping APIs for tracking, and implement inventory management to prevent overselling.",
+            "dependencies": [
+              "8.4"
+            ],
+            "details": "Build order creation and confirmation system with unique order IDs and customer notifications. Integrate CJ Logistics and Lotte Logistics APIs for shipping calculation and tracking. Implement real-time inventory checking and reservation during checkout to prevent overselling. Create order status updates, tracking number integration, and automated inventory adjustment after successful payment.",
+            "status": "done",
+            "testStrategy": "Order creation tests, shipping API integration verification, inventory management tests, and order tracking functionality validation"
+          }
+        ]
       },
       {
         "id": 9,
@@ -228,7 +282,7 @@
           5,
           7
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": []
       },
       {
@@ -248,7 +302,7 @@
     ],
     "metadata": {
       "created": "2025-07-28T06:44:12.684Z",
-      "updated": "2025-07-30T14:30:35.231Z",
+      "updated": "2025-07-31T07:05:38.293Z",
       "description": "Tasks for master context"
     }
   }

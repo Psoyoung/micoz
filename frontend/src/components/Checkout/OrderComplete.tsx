@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { clearCart } from '../../store/cartSlice';
 import { resetCheckout } from '../../store/checkoutSlice';
+import { resetPayment } from '../../store/paymentSlice';
+import { formatOrderNumber } from '../../services/orderService';
 import { Button } from '../Button';
 
 const Container = styled.div`
@@ -151,42 +152,34 @@ const formatPrice = (price: number): string => {
   return `₩${price.toLocaleString()}`;
 };
 
-const generateOrderNumber = (): string => {
-  const now = new Date();
-  const datePart = now.toISOString().slice(0, 10).replace(/-/g, '');
-  const randomPart = Math.random().toString(36).substr(2, 6).toUpperCase();
-  return `ORD${datePart}${randomPart}`;
-};
-
 export const OrderComplete: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   
-  const { total, itemCount } = useAppSelector(state => state.cart);
-  const { 
-    selectedAddress, 
-    selectedShippingMethod, 
-    selectedPaymentMethod 
-  } = useAppSelector(state => state.checkout);
+  const { currentOrder } = useAppSelector(state => state.payment);
 
-  const orderNumber = generateOrderNumber();
-  const shippingCost = selectedShippingMethod?.price || 0;
-  const finalTotal = total + shippingCost;
-
-  // 주문 완료 시 장바구니 비우기
+  // 주문이 없으면 홈으로 리다이렉트
   useEffect(() => {
-    dispatch(clearCart());
-  }, [dispatch]);
+    if (!currentOrder) {
+      navigate('/');
+    }
+  }, [currentOrder, navigate]);
 
   const handleContinueShopping = () => {
     dispatch(resetCheckout());
+    dispatch(resetPayment());
     navigate('/');
   };
 
   const handleViewOrders = () => {
     dispatch(resetCheckout());
+    dispatch(resetPayment());
     navigate('/orders');
   };
+
+  if (!currentOrder) {
+    return null; // 리다이렉트 중
+  }
 
   return (
     <Container>
@@ -222,47 +215,54 @@ export const OrderComplete: React.FC = () => {
       >
         <OrderNumber>
           <OrderNumberLabel>주문번호</OrderNumberLabel>
-          <OrderNumberValue>{orderNumber}</OrderNumberValue>
+          <OrderNumberValue>{formatOrderNumber(currentOrder.orderNumber)}</OrderNumberValue>
         </OrderNumber>
 
         <OrderDetailsGrid>
           <OrderDetailRow>
             <DetailLabel>주문 상품</DetailLabel>
-            <DetailValue>{itemCount}개 상품</DetailValue>
+            <DetailValue>{currentOrder.items.length}개 상품</DetailValue>
           </OrderDetailRow>
 
           <OrderDetailRow>
             <DetailLabel>배송지</DetailLabel>
             <DetailValue>
-              {selectedAddress?.name} ({selectedAddress?.address})
+              {currentOrder.shippingAddress.name} ({currentOrder.shippingAddress.address})
             </DetailValue>
           </OrderDetailRow>
 
           <OrderDetailRow>
             <DetailLabel>배송 방법</DetailLabel>
-            <DetailValue>{selectedShippingMethod?.name}</DetailValue>
+            <DetailValue>{currentOrder.shippingMethod.name}</DetailValue>
           </OrderDetailRow>
 
           <OrderDetailRow>
             <DetailLabel>결제 방법</DetailLabel>
-            <DetailValue>{selectedPaymentMethod?.name}</DetailValue>
+            <DetailValue>{currentOrder.paymentMethod.name}</DetailValue>
           </OrderDetailRow>
 
           <OrderDetailRow>
             <DetailLabel>상품 금액</DetailLabel>
-            <DetailValue>{formatPrice(total)}</DetailValue>
+            <DetailValue>{formatPrice(currentOrder.subtotal)}</DetailValue>
           </OrderDetailRow>
+
+          {currentOrder.discount > 0 && (
+            <OrderDetailRow>
+              <DetailLabel>할인 금액</DetailLabel>
+              <DetailValue style={{ color: '#ef4444' }}>-{formatPrice(currentOrder.discount)}</DetailValue>
+            </OrderDetailRow>
+          )}
 
           <OrderDetailRow>
             <DetailLabel>배송비</DetailLabel>
             <DetailValue>
-              {shippingCost === 0 ? '무료' : formatPrice(shippingCost)}
+              {currentOrder.shippingCost === 0 ? '무료' : formatPrice(currentOrder.shippingCost)}
             </DetailValue>
           </OrderDetailRow>
 
           <OrderDetailRow>
             <DetailLabel>총 결제금액</DetailLabel>
-            <DetailValue>{formatPrice(finalTotal)}</DetailValue>
+            <DetailValue>{formatPrice(currentOrder.total)}</DetailValue>
           </OrderDetailRow>
         </OrderDetailsGrid>
       </OrderInfoCard>

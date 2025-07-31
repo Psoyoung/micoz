@@ -4,6 +4,7 @@ import wishlistReducer from './wishlistSlice';
 import toastReducer from './toastSlice';
 import checkoutReducer from './checkoutSlice';
 import addressReducer from './addressSlice';
+import paymentReducer from './paymentSlice';
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     toast: toastReducer,
     checkout: checkoutReducer,
     address: addressReducer,
+    payment: paymentReducer,
   },
 });
 
