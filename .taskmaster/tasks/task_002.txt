@@ -1,0 +1,29 @@
+# Task ID: 2
+# Title: Implement Design System and UI Components
+# Status: done
+# Dependencies: 1
+# Priority: high
+# Description: Create a comprehensive design system based on the specified color palette, typography, and UI components that align with MICOZ's brand identity.
+# Details:
+1. Create a design tokens file with the specified color palette:
+   - Primary: Deep Forest Green (#2C5F41), Sage Green (#87A96B), Soft Mint (#B8D4C6)
+   - Secondary: Warm Beige (#F5F1ED), Ivory White (#FEFCF8), Charcoal Grey (#2B2B2B)
+   - Accent: Rose Gold (#E8B4A0), Soft Coral (#F2B5A7)
+2. Setup typography system:
+   - Import and configure Pretendard (한글), Inter (영문) as primary fonts
+   - Import and configure Noto Serif KR (한글), Playfair Display (영문) as secondary fonts
+   - Create typography scale as specified in the PRD
+3. Build reusable UI components:
+   - Button system (Primary, Secondary, Text buttons)
+   - Card system (Product, Story, Review cards)
+   - Form elements (Input fields, Select boxes, Checkboxes/Radio buttons)
+   - Navigation components
+   - Modal and dialog components
+4. Create a Storybook to document all components
+
+# Test Strategy:
+1. Visual regression testing for all UI components
+2. Accessibility testing to ensure WCAG compliance
+3. Responsive design testing across different device sizes
+4. Cross-browser compatibility testing
+5. Storybook documentation review

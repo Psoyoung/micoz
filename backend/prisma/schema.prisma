@@ -56,6 +56,8 @@ model User {
   reviewComments ReviewComment[]
   notifications Notification[]
   sentNotifications Notification[] @relation("NotificationSender")
+  behaviors     UserBehavior[]
+  recommendations UserRecommendation[]
 
   @@map("users")
 }
@@ -123,6 +125,10 @@ model Product {
   wishlistItems WishlistItem[]
   variants      ProductVariant[]
   questions     Question[]
+  behaviors     UserBehavior[]
+  similarities  ProductSimilarity[] @relation("ProductSimilarities")
+  similarTo     ProductSimilarity[] @relation("SimilarProducts")
+  recommendations UserRecommendation[]
 
   @@map("products")
 }
@@ -591,4 +597,87 @@ enum NotificationType {
   FOLLOW_TIP           // Someone followed your beauty tip
   MENTION              // Someone mentioned you
   SYSTEM               // System notifications
+}
+
+model UserBehavior {
+  id        String @id @default(cuid())
+  userId    String
+  productId String
+  action    BehaviorAction
+  sessionId String?
+  metadata  String? // JSON string for additional data
+  
+  createdAt DateTime @default(now())
+  
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, createdAt])
+  @@index([productId, action])
+  @@map("user_behaviors")
+}
+
+model ProductSimilarity {
+  id              String @id @default(cuid())
+  productId       String
+  similarProductId String
+  similarityScore Float
+  similarityType  SimilarityType
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  product        Product @relation("ProductSimilarities", fields: [productId], references: [id], onDelete: Cascade)
+  similarProduct Product @relation("SimilarProducts", fields: [similarProductId], references: [id], onDelete: Cascade)
+  
+  @@unique([productId, similarProductId, similarityType])
+  @@index([productId, similarityScore])
+  @@map("product_similarities")
+}
+
+model UserRecommendation {
+  id        String @id @default(cuid())
+  userId    String
+  productId String
+  score     Float
+  algorithm RecommendationAlgorithm
+  metadata  String? // JSON string for recommendation context
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, productId, algorithm])
+  @@index([userId, score])
+  @@map("user_recommendations")
+}
+
+enum BehaviorAction {
+  VIEW              // Product page view
+  ADD_TO_CART      // Add to cart
+  REMOVE_FROM_CART // Remove from cart
+  PURCHASE         // Complete purchase
+  ADD_TO_WISHLIST  // Add to wishlist
+  REMOVE_FROM_WISHLIST // Remove from wishlist
+  SEARCH           // Search for product
+  FILTER           // Use filters that include product
+  REVIEW           // Write review
+  SHARE            // Share product
+}
+
+enum SimilarityType {
+  CONTENT_BASED    // Based on product attributes
+  COLLABORATIVE    // Based on user behavior
+  HYBRID          // Combination of both
+}
+
+enum RecommendationAlgorithm {
+  CONTENT_BASED
+  COLLABORATIVE_FILTERING
+  HYBRID
+  POPULARITY_BASED
+  RECENTLY_VIEWED
+  FREQUENTLY_BOUGHT_TOGETHER
 }

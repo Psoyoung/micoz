@@ -9,6 +9,8 @@ import reviewRoutes from './routes/review';
 import qaRoutes from './routes/qa';
 import beautyTipsRoutes from './routes/beautyTips';
 import commentsRoutes from './routes/comments';
+import searchRoutes from './routes/search';
+import recommendationRoutes from './routes/recommendation';
 
 dotenv.config();
 
@@ -48,6 +50,8 @@ app.use('/api', reviewRoutes);
 app.use('/api', qaRoutes);
 app.use('/api', beautyTipsRoutes);
 app.use('/api', commentsRoutes);
+app.use('/api', searchRoutes);
+app.use('/api', recommendationRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

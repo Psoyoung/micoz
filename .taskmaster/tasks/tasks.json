@@ -282,8 +282,81 @@
           5,
           7
         ],
-        "status": "in-progress",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Review System Database Schema",
+            "description": "Design and implement database schema for product reviews including ratings, photos, and user interactions",
+            "details": "- Create reviews table with fields: id, product_id, user_id, rating, title, content, photos, created_at, updated_at, status\n- Create review_photos table for multiple photo uploads\n- Create review_votes table for helpful/unhelpful voting\n- Add indexes for performance optimization",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 9
+          },
+          {
+            "id": 2,
+            "title": "Implement Review API Endpoints",
+            "description": "Create REST API endpoints for review CRUD operations, photo uploads, and voting",
+            "details": "- POST /api/reviews - Create new review with photo upload\n- GET /api/reviews/product/:id - Get reviews for product\n- PUT /api/reviews/:id - Update review\n- DELETE /api/reviews/:id - Delete review\n- POST /api/reviews/:id/vote - Vote helpful/unhelpful\n- GET /api/reviews/user/:id - Get user's reviews",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 9
+          },
+          {
+            "id": 3,
+            "title": "Build Review UI Components",
+            "description": "Create React components for displaying and submitting product reviews",
+            "details": "- ReviewList component for displaying reviews\n- ReviewForm component for submitting reviews\n- StarRating component for rating display/input\n- PhotoUpload component for review photos\n- ReviewCard component for individual review display\n- ReviewStats component for aggregate ratings",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 9
+          },
+          {
+            "id": 4,
+            "title": "Create Q&A System Database Schema",
+            "description": "Design and implement database schema for Q&A functionality",
+            "details": "- Create questions table: id, product_id, user_id, title, content, created_at, status\n- Create answers table: id, question_id, user_id, content, is_staff, created_at, upvotes\n- Create question_votes table for upvoting answers\n- Add search indexes for Q&A content",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 9
+          },
+          {
+            "id": 5,
+            "title": "Implement Q&A API Endpoints",
+            "description": "Create REST API endpoints for Q&A functionality including search",
+            "details": "- POST /api/questions - Submit new question\n- GET /api/questions/product/:id - Get questions for product\n- POST /api/answers - Submit answer to question\n- PUT /api/answers/:id/vote - Upvote answer\n- GET /api/questions/search - Search Q&A content\n- GET /api/questions/:id - Get question with answers",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 9
+          },
+          {
+            "id": 6,
+            "title": "Build Q&A UI Components",
+            "description": "Create React components for Q&A functionality",
+            "details": "- QuestionList component for displaying questions\n- QuestionForm component for submitting questions\n- AnswerForm component for submitting answers\n- QuestionCard component with answers\n- QASearch component for searching Q&A\n- UpvoteButton component for answer voting",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 9
+          },
+          {
+            "id": 7,
+            "title": "Implement Notification System",
+            "description": "Create notification system for community interactions",
+            "details": "- Create notifications table for storing user notifications\n- Implement real-time notifications for new answers, votes, replies\n- Create notification API endpoints\n- Build notification UI components\n- Add email notification options\n- Implement notification preferences",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 9
+          },
+          {
+            "id": 8,
+            "title": "Create Beauty Tips Community System",
+            "description": "Develop user-generated beauty tips sharing platform",
+            "details": "- Create beauty_tips table with rich media support\n- Implement categorization and tagging system\n- Create API endpoints for tips CRUD operations\n- Build TipCard, TipForm, TipsList components\n- Add social sharing functionality\n- Implement content moderation tools",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 9
+          }
+        ]
       },
       {
         "id": 10,
@@ -297,12 +370,67 @@
           7
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Setup Elasticsearch Infrastructure",
+            "description": "Configure Elasticsearch server and create product search index with Korean language support",
+            "details": "- Setup Elasticsearch server (Docker or cloud service)\n- Configure Korean language analyzer\n- Create product index with appropriate mappings\n- Setup index lifecycle management\n- Configure search templates",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 10
+          },
+          {
+            "id": 2,
+            "title": "Implement Product Search API",
+            "description": "Create search API endpoints with Elasticsearch integration and filtering capabilities",
+            "details": "- Create search service with Elasticsearch client\n- Implement full-text search with Korean support\n- Add autocomplete/suggestion functionality\n- Implement search filters (category, price, brand, etc.)\n- Add search result pagination and sorting\n- Create search analytics tracking",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 10
+          },
+          {
+            "id": 3,
+            "title": "Build Search UI Components",
+            "description": "Create React components for search functionality including autocomplete and filters",
+            "details": "- SearchBar component with autocomplete\n- SearchFilters component for filtering results\n- SearchResults component for displaying products\n- SearchSuggestions component for query suggestions\n- FilterTags component for active filters\n- SearchHistory component for recent searches",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 10
+          },
+          {
+            "id": 4,
+            "title": "Implement Recommendation Engine",
+            "description": "Create recommendation system using collaborative and content-based filtering",
+            "details": "- Implement collaborative filtering algorithm\n- Create content-based filtering using product attributes\n- Build hybrid recommendation system\n- Add personalization based on user behavior\n- Implement real-time recommendation updates\n- Create recommendation caching system",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 10
+          },
+          {
+            "id": 5,
+            "title": "Build Recommendation UI Components",
+            "description": "Create React components for displaying personalized product recommendations",
+            "details": "- RecommendedProducts component for homepage\n- PersonalizedRecommendations component for user profile\n- SimilarProducts component for product pages\n- RecentlyViewed component for browsing history\n- WishlistRecommendations component based on wishlist\n- RecommendationCarousel component for various sections",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 10
+          },
+          {
+            "id": 6,
+            "title": "Implement Analytics and A/B Testing",
+            "description": "Create analytics system to track search and recommendation performance with A/B testing framework",
+            "details": "- Implement search analytics (queries, results, clicks)\n- Track recommendation performance metrics\n- Create A/B testing framework for algorithms\n- Build analytics dashboard for insights\n- Implement conversion tracking\n- Setup performance monitoring",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 10
+          }
+        ]
       }
     ],
     "metadata": {
       "created": "2025-07-28T06:44:12.684Z",
-      "updated": "2025-07-31T07:05:38.293Z",
+      "updated": "2025-08-01T08:16:50.892Z",
       "description": "Tasks for master context"
     }
   }

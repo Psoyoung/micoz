@@ -1,0 +1,120 @@
+# Task ID: 9
+# Title: Implement Community and Review System
+# Status: done
+# Dependencies: 5, 7
+# Priority: medium
+# Description: Develop the community features including product reviews, Q&A, and beauty tips sections to foster user engagement.
+# Details:
+1. Create product review system:
+   - Star rating mechanism
+   - Photo upload capability
+   - Text review with formatting options
+   - Helpful vote system
+   - Review moderation tools
+2. Implement Q&A functionality:
+   - Question submission
+   - Answer from staff and community
+   - Upvoting helpful answers
+   - Search within Q&A
+3. Develop beauty tips community:
+   - User-generated content submission
+   - Categorization and tagging
+   - Rich media support
+   - Social sharing
+4. Create notification system for community interactions
+5. Implement comment and discussion functionality
+
+# Test Strategy:
+1. Test review submission and display
+2. Verify photo upload in reviews
+3. Test Q&A submission and answering
+4. Verify community content moderation tools
+5. Test notification system for community interactions
+6. Verify social sharing functionality
+7. Performance testing for media-rich community content
+
+# Subtasks:
+## 1. Create Review System Database Schema [done]
+### Dependencies: None
+### Description: Design and implement database schema for product reviews including ratings, photos, and user interactions
+### Details:
+- Create reviews table with fields: id, product_id, user_id, rating, title, content, photos, created_at, updated_at, status
+- Create review_photos table for multiple photo uploads
+- Create review_votes table for helpful/unhelpful voting
+- Add indexes for performance optimization
+
+## 2. Implement Review API Endpoints [done]
+### Dependencies: None
+### Description: Create REST API endpoints for review CRUD operations, photo uploads, and voting
+### Details:
+- POST /api/reviews - Create new review with photo upload
+- GET /api/reviews/product/:id - Get reviews for product
+- PUT /api/reviews/:id - Update review
+- DELETE /api/reviews/:id - Delete review
+- POST /api/reviews/:id/vote - Vote helpful/unhelpful
+- GET /api/reviews/user/:id - Get user's reviews
+
+## 3. Build Review UI Components [done]
+### Dependencies: None
+### Description: Create React components for displaying and submitting product reviews
+### Details:
+- ReviewList component for displaying reviews
+- ReviewForm component for submitting reviews
+- StarRating component for rating display/input
+- PhotoUpload component for review photos
+- ReviewCard component for individual review display
+- ReviewStats component for aggregate ratings
+
+## 4. Create Q&A System Database Schema [done]
+### Dependencies: None
+### Description: Design and implement database schema for Q&A functionality
+### Details:
+- Create questions table: id, product_id, user_id, title, content, created_at, status
+- Create answers table: id, question_id, user_id, content, is_staff, created_at, upvotes
+- Create question_votes table for upvoting answers
+- Add search indexes for Q&A content
+
+## 5. Implement Q&A API Endpoints [done]
+### Dependencies: None
+### Description: Create REST API endpoints for Q&A functionality including search
+### Details:
+- POST /api/questions - Submit new question
+- GET /api/questions/product/:id - Get questions for product
+- POST /api/answers - Submit answer to question
+- PUT /api/answers/:id/vote - Upvote answer
+- GET /api/questions/search - Search Q&A content
+- GET /api/questions/:id - Get question with answers
+
+## 6. Build Q&A UI Components [done]
+### Dependencies: None
+### Description: Create React components for Q&A functionality
+### Details:
+- QuestionList component for displaying questions
+- QuestionForm component for submitting questions
+- AnswerForm component for submitting answers
+- QuestionCard component with answers
+- QASearch component for searching Q&A
+- UpvoteButton component for answer voting
+
+## 7. Implement Notification System [done]
+### Dependencies: None
+### Description: Create notification system for community interactions
+### Details:
+- Create notifications table for storing user notifications
+- Implement real-time notifications for new answers, votes, replies
+- Create notification API endpoints
+- Build notification UI components
+- Add email notification options
+- Implement notification preferences
+
+## 8. Create Beauty Tips Community System [done]
+### Dependencies: None
+### Description: Develop user-generated beauty tips sharing platform
+### Details:
+- Create beauty_tips table with rich media support
+- Implement categorization and tagging system
+- Create API endpoints for tips CRUD operations
+- Build TipCard, TipForm, TipsList components
+- Add social sharing functionality
+- Implement content moderation tools
+
