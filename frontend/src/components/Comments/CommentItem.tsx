@@ -296,7 +296,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
             <FormActions>
               <Button
                 variant="secondary"
-                size="sm"
+                size="small"
                 onClick={() => {
                   setShowEditForm(false);
                   setEditContent(comment.content);
@@ -307,7 +307,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               </Button>
               <Button
                 variant="primary"
-                size="sm"
+                size="small"
                 onClick={handleEdit}
                 disabled={isSubmitting || !editContent.trim()}
               >
@@ -336,7 +336,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                   <FormActions>
                     <Button
                       variant="secondary"
-                      size="sm"
+                      size="small"
                       onClick={() => {
                         setShowReplyForm(false);
                         setReplyContent('');
@@ -347,7 +347,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                     </Button>
                     <Button
                       variant="primary"
-                      size="sm"
+                      size="small"
                       onClick={handleReply}
                       disabled={isSubmitting || !replyContent.trim()}
                     >

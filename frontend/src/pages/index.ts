@@ -1,4 +1,6 @@
 export { HomePage } from './HomePage';
+export { LoginPage } from './LoginPage';
+export { RegisterPage } from './RegisterPage';
 export { ProductCategoryPage } from './ProductCategoryPage';
 export { SkincareCategory } from './SkincareCategory';
 export { MakeupCategory } from './MakeupCategory';

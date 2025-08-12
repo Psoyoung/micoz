@@ -15,6 +15,8 @@ export interface InputProps {
   value?: string;
   name?: string;
   id?: string;
+  readOnly?: boolean;
+  maxLength?: number;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;

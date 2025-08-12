@@ -218,8 +218,8 @@ export const CheckoutPage: React.FC = () => {
   const dispatch = useAppDispatch();
   
   const { items, itemCount } = useAppSelector(state => state.cart);
-  const { currentStep, steps, isProcessing } = useAppSelector(state => state.checkout);
-  const { isProcessing: isPaymentProcessing, paymentStatus, currentOrder } = useAppSelector(state => state.payment);
+  const { currentStep, steps, isProcessing, selectedAddress, selectedShippingMethod, selectedPaymentMethod } = useAppSelector(state => state.checkout);
+  const { isProcessing: isPaymentProcessing } = useAppSelector(state => state.payment);
 
   // 장바구니가 비어있으면 홈으로 리다이렉트
   useEffect(() => {
@@ -292,8 +292,6 @@ export const CheckoutPage: React.FC = () => {
 
   // 다음 버튼 활성화 조건
   const canProceed = () => {
-    const { selectedAddress, selectedShippingMethod, selectedPaymentMethod } = useAppSelector(state => state.checkout);
-    
     switch (currentStep) {
       case 0:
         return items.length > 0;

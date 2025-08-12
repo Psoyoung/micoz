@@ -1,31 +1,31 @@
 # Task ID: 4
-# Title: Implement Product Catalog and Category Pages
+# Title: 제품 카탈로그 및 카테고리 페이지 구현
 # Status: done
 # Dependencies: 2, 3
 # Priority: high
-# Description: Develop the product catalog structure with category pages for skincare, makeup, and special care products as defined in the information architecture.
+# Description: 정보 아키텍처에 정의된 스킨케어, 메이크업, 스페셜 케어 제품을 위한 카테고리 페이지와 함께 제품 카탈로그 구조를 개발합니다.
 # Details:
-1. Create product category pages with filtering options:
-   - Skincare (Cleanser, Toner, Serum, Moisturizer, Suncare)
-   - Makeup (Base, Point, Lip products)
-   - Special Care
-2. Implement filtering and sorting functionality:
-   - Filter by product type, concerns, ingredients
-   - Sort by price, popularity, newest
-3. Design product card components with:
-   - Product image
-   - Product name
-   - Brief description
-   - Price
-   - Rating
-4. Implement pagination or infinite scroll for product listings
-5. Create Redux slices for managing product catalog state
-6. Implement API integration with backend for fetching product data
+1. 필터링 옵션이 있는 제품 카테고리 페이지 생성:
+   - 스킨케어 (클렌저, 토너, 세럼, 모이스처라이저, 선케어)
+   - 메이크업 (베이스, 포인트, 립 제품)
+   - 스페셜 케어
+2. 필터링 및 정렬 기능 구현:
+   - 제품 유형, 고민, 성분별 필터
+   - 가격, 인기도, 최신순 정렬
+3. 다음을 포함한 제품 카드 컴포넌트 디자인:
+   - 제품 이미지
+   - 제품명
+   - 간단한 설명
+   - 가격
+   - 평점
+4. 제품 목록을 위한 페이지네이션 또는 무한 스크롤 구현
+5. 제품 카탈로그 상태 관리를 위한 Redux slice 생성
+6. 제품 데이터 가져오기를 위한 백엔드 API 통합 구현
 
 # Test Strategy:
-1. Test filtering and sorting functionality
-2. Verify product data is correctly displayed
-3. Performance testing for image loading
-4. Test pagination/infinite scroll behavior
-5. Verify responsive layout on different devices
-6. API integration tests
+1. 필터링 및 정렬 기능 테스트
+2. 제품 데이터가 올바르게 표시되는지 확인
+3. 이미지 로딩 성능 테스트
+4. 페이지네이션/무한 스크롤 동작 테스트
+5. 다양한 기기에서 반응형 레이아웃 확인
+6. API 통합 테스트

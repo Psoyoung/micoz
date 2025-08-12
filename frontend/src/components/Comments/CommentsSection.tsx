@@ -360,7 +360,7 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({
         <Pagination>
           <Button
             variant="secondary"
-            size="sm"
+            size="small"
             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
             disabled={currentPage === 1}
           >
@@ -371,7 +371,7 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({
           </PaginationInfo>
           <Button
             variant="secondary"
-            size="sm"
+            size="small"
             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
             disabled={currentPage === totalPages}
           >

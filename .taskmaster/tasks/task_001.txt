@@ -1,40 +1,40 @@
 # Task ID: 1
-# Title: Setup Project Repository and Base Architecture
+# Title: 프로젝트 저장소 및 기본 아키텍처 설정
 # Status: done
 # Dependencies: None
 # Priority: high
-# Description: Initialize the project repository with React.js 18 frontend and Node.js 18 backend structure following the technical requirements specified in the PRD.
+# Description: PRD에 명시된 기술 요구사항에 따라 React.js 18 프론트엔드와 Node.js 18 백엔드 구조로 프로젝트 저장소를 초기화합니다.
 # Details:
-1. Create a monorepo structure with separate frontend and backend directories
-2. Frontend setup:
-   - Initialize React 18 with TypeScript
-   - Configure Styled-components for styling
-   - Setup Redux Toolkit for state management
-   - Configure React Router v6
-   - Install Framer Motion for animations
-3. Backend setup:
-   - Initialize Node.js 18 with Express.js
-   - Configure PostgreSQL connection with Prisma ORM
-   - Setup basic JWT authentication structure
-   - Configure AWS S3 connection for file storage
-4. Setup development environment:
-   - Configure ESLint and Prettier
-   - Setup Git hooks with Husky
-   - Create Docker configuration for development environment
+1. 프론트엔드와 백엔드 디렉토리를 분리한 모노레포 구조 생성
+2. 프론트엔드 설정:
+   - TypeScript와 함께 React 18 초기화
+   - 스타일링을 위한 Styled-components 설정
+   - 상태 관리를 위한 Redux Toolkit 설정
+   - React Router v6 설정
+   - 애니메이션을 위한 Framer Motion 설치
+3. 백엔드 설정:
+   - Express.js와 함께 Node.js 18 초기화
+   - Prisma ORM을 사용한 PostgreSQL 연결 설정
+   - 기본 JWT 인증 구조 설정
+   - 파일 저장을 위한 AWS S3 연결 설정
+4. 개발 환경 설정:
+   - ESLint 및 Prettier 설정
+   - Husky를 사용한 Git hooks 설정
+   - 개발 환경용 Docker 설정 생성
 
 # Test Strategy:
-1. Verify all dependencies are correctly installed and working
-2. Ensure the development server starts without errors
-3. Validate the connection between frontend and backend
-4. Test database connection and basic CRUD operations
-5. Verify AWS S3 connection for file uploads
+1. 모든 의존성이 올바르게 설치되고 작동하는지 확인
+2. 개발 서버가 오류 없이 시작되는지 확인
+3. 프론트엔드와 백엔드 간 연결 검증
+4. 데이터베이스 연결 및 기본 CRUD 작업 테스트
+5. 파일 업로드를 위한 AWS S3 연결 확인
 
 # Subtasks:
-## 1. Initialize Monorepo Structure and Basic Configuration [done]
+## 1. 모노레포 구조 및 기본 설정 초기화 [done]
 ### Dependencies: None
-### Description: Create the foundational monorepo structure with separate frontend and backend directories, initialize basic package.json files, and setup workspace configuration.
+### Description: 프론트엔드와 백엔드 디렉토리를 분리한 기초 모노레포 구조를 생성하고, 기본 package.json 파일을 초기화하며, 워크스페이스 설정을 설정합니다.
 ### Details:
-Create root directory structure with /frontend and /backend folders. Initialize package.json in root with workspace configuration for monorepo management. Setup basic .gitignore, README.md, and environment variable templates (.env.example). Configure npm/yarn workspaces to manage dependencies across both frontend and backend.
+/frontend와 /backend 폴더가 있는 루트 디렉토리 구조를 생성합니다. 모노레포 관리를 위한 워크스페이스 설정으로 루트에 package.json을 초기화합니다. 기본 .gitignore, README.md, 환경변수 템플릿 (.env.example)을 설정합니다. 프론트엔드와 백엔드 모두에서 의존성을 관리하기 위해 npm/yarn 워크스페이스를 설정합니다.
 
 ## 2. Setup React 18 Frontend with TypeScript and Core Dependencies [done]
 ### Dependencies: 1.1

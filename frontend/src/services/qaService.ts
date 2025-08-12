@@ -13,7 +13,8 @@ export interface Question {
   downvotes: number;
   isAnswered: boolean;
   createdAt: Date;
-  updatedAt?: Date;
+  updatedAt: Date;
+  bestAnswerId?: string;
   user: {
     name: string;
     avatar?: string;
@@ -42,6 +43,10 @@ export interface Answer {
     avatar?: string;
     isOfficial: boolean;
   };
+  // Legacy fields for backward compatibility
+  userAvatar?: string;
+  userName?: string;
+  votedBy: string[];
 }
 
 export type QuestionCategory = 

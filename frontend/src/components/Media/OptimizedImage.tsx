@@ -218,7 +218,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
 
   const checkImageLoad = (imageSrc: string): Promise<void> => {
     return new Promise((resolve, reject) => {
-      const img = new Image();
+      const img = new window.Image();
       img.onload = () => resolve();
       img.onerror = () => reject(new Error('Image failed to load'));
       img.src = imageSrc;

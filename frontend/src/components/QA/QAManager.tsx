@@ -215,8 +215,8 @@ export const QAManager: React.FC<QAManagerProps> = ({
   const loadQuestions = async () => {
     try {
       setLoading(true);
-      const [sortBy, sortOrder] = (filters.sortBy && filters.sortOrder) 
-        ? [filters.sortBy, filters.sortOrder]
+      const [sortBy, sortOrder]: ['createdAt' | 'upvotes' | 'answers', 'desc' | 'asc'] = (filters.sortBy && filters.sortOrder) 
+        ? [filters.sortBy as 'createdAt' | 'upvotes' | 'answers', filters.sortOrder as 'desc' | 'asc']
         : ['createdAt', 'desc'];
 
       const response = await qaService.getQuestionsByProduct(
@@ -367,7 +367,7 @@ export const QAManager: React.FC<QAManagerProps> = ({
             <Select
               options={categories}
               value={filters.category || ''}
-              onChange={(value) => handleFilterChange('category', value)}
+              onChange={(value: string) => handleFilterChange('category', value)}
               placeholder="카테고리 선택"
             />
           </div>
@@ -376,7 +376,7 @@ export const QAManager: React.FC<QAManagerProps> = ({
             <Select
               options={statuses}
               value={filters.status || ''}
-              onChange={(value) => handleFilterChange('status', value)}
+              onChange={(value: string) => handleFilterChange('status', value)}
               placeholder="상태 선택"
             />
           </div>
@@ -416,7 +416,7 @@ export const QAManager: React.FC<QAManagerProps> = ({
               <Pagination>
                 <Button
                   variant="secondary"
-                  size="sm"
+                  size="small"
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
                 >
@@ -427,7 +427,7 @@ export const QAManager: React.FC<QAManagerProps> = ({
                 </PaginationInfo>
                 <Button
                   variant="secondary"
-                  size="sm"
+                  size="small"
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
                 >

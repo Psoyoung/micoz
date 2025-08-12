@@ -290,32 +290,194 @@ export const ProductCategoryPage: React.FC<ProductCategoryPageProps> = ({
   const fetchProducts = async (page: number = 1) => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        category: encodeURIComponent(category),
-        page: page.toString(),
-        limit: '12',
-        sortBy: filters.sortBy,
-        sortOrder: filters.sortOrder,
-      });
+      // 임시 스킨케어 제품 데이터
+      const mockSkincareProducts: Product[] = [
+        {
+          id: '1',
+          name: '젠틀 포밍 클렌저',
+          description: '민감한 피부를 위한 부드러운 폼 클렌저입니다. 천연 성분으로 메이크업과 불순물을 깔끔하게 제거하면서도 피부 본연의 수분은 지켜줍니다.',
+          price: 32000,
+          category: '스킨케어',
+          subCategory: '클렌저',
+          brand: 'MICOZ',
+          slug: 'gentle-foaming-cleanser',
+          images: ['https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400'],
+          isNew: true,
+          isBestseller: false,
+          featured: false,
+          inventory: 50,
+          rating: { average: 4.8, count: 32 },
+          wishlistCount: 15,
+          createdAt: '2024-01-15T10:00:00Z',
+          publishedAt: '2024-01-15T10:00:00Z',
+        },
+        {
+          id: '2',
+          name: '딥 클렌징 오일',
+          description: '워터프루프 메이크업까지 깔끔하게 제거하는 클렌징 오일입니다. 식물성 오일로 만들어져 피부에 부담을 주지 않으면서도 깊숙한 노폐물까지 제거합니다.',
+          price: 28000,
+          category: '스킨케어',
+          subCategory: '클렌저',
+          brand: 'MICOZ',
+          slug: 'deep-cleansing-oil',
+          images: ['https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=400'],
+          isNew: false,
+          isBestseller: true,
+          featured: false,
+          inventory: 35,
+          rating: { average: 4.6, count: 28 },
+          wishlistCount: 22,
+          createdAt: '2024-01-10T10:00:00Z',
+          publishedAt: '2024-01-10T10:00:00Z',
+        },
+        {
+          id: '3',
+          name: '하이드레이팅 토너',
+          description: '깊은 수분 공급으로 건조한 피부에 생기를 불어넣는 하이드레이팅 토너입니다. 7가지 히알루론산이 피부 깊숙이 수분을 전달합니다.',
+          price: 24000,
+          category: '스킨케어',
+          subCategory: '토너',
+          brand: 'MICOZ',
+          slug: 'hydrating-toner',
+          images: ['https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=600'],
+          isNew: false,
+          isBestseller: false,
+          featured: true,
+          inventory: 42,
+          rating: { average: 4.7, count: 18 },
+          wishlistCount: 9,
+          createdAt: '2024-01-05T10:00:00Z',
+          publishedAt: '2024-01-05T10:00:00Z',
+        },
+        {
+          id: '4',
+          name: '비타민 C 브라이트닝 세럼',
+          description: '순수 비타민 C로 칙칙한 피부를 밝게 가꿔주는 브라이트닝 세럼입니다. 멜라닌 생성을 억제하여 깨끗하고 투명한 피부로 만들어줍니다.',
+          price: 45000,
+          category: '스킨케어',
+          subCategory: '세럼',
+          brand: 'MICOZ',
+          slug: 'vitamin-c-serum',
+          images: ['https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=400'],
+          isNew: true,
+          isBestseller: true,
+          featured: true,
+          inventory: 25,
+          rating: { average: 4.9, count: 45 },
+          wishlistCount: 38,
+          createdAt: '2024-01-20T10:00:00Z',
+          publishedAt: '2024-01-20T10:00:00Z',
+        },
+        {
+          id: '5',
+          name: '레티놀 안티에이징 세럼',
+          description: '순순한 레티놀로 주름과 탄력 개선에 도움을 주는 안티에이징 세럼입니다. 야간에 사용하여 피부 재생을 촉진시킵니다.',
+          price: 52000,
+          category: '스킨케어',
+          subCategory: '세럼',
+          brand: 'MICOZ',
+          slug: 'retinol-serum',
+          images: ['https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=600'],
+          isNew: false,
+          isBestseller: false,
+          featured: false,
+          inventory: 18,
+          rating: { average: 4.5, count: 22 },
+          wishlistCount: 16,
+          createdAt: '2024-01-08T10:00:00Z',
+          publishedAt: '2024-01-08T10:00:00Z',
+        },
+        {
+          id: '6',
+          name: '올-인-원 모이스처라이저',
+          description: '하나로 끝내는 올인원 모이스처라이저입니다. 세럼, 크림, 앰플의 기능을 모두 담아 간편하고 효과적인 스킨케어를 완성합니다.',
+          price: 38000,
+          category: '스킨케어',
+          subCategory: '크림',
+          brand: 'MICOZ',
+          slug: 'all-in-one-moisturizer',
+          images: ['https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600'],
+          isNew: false,
+          isBestseller: true,
+          featured: false,
+          inventory: 33,
+          rating: { average: 4.4, count: 35 },
+          wishlistCount: 20,
+          createdAt: '2024-01-12T10:00:00Z',
+          publishedAt: '2024-01-12T10:00:00Z',
+        }
+      ];
 
-      if (filters.subCategory) {
-        params.append('subCategory', encodeURIComponent(filters.subCategory));
+      // 카테고리별 필터링
+      let filteredProducts = mockSkincareProducts;
+      if (category === '스킨케어') {
+        filteredProducts = mockSkincareProducts;
+      } else {
+        filteredProducts = []; // 다른 카테고리는 빈 배열
       }
+
+      // 서브카테고리 필터링
+      if (filters.subCategory) {
+        filteredProducts = filteredProducts.filter(product => 
+          product.subCategory === filters.subCategory
+        );
+      }
+
+      // 가격 필터링
       if (filters.minPrice > 0) {
-        params.append('minPrice', filters.minPrice.toString());
+        filteredProducts = filteredProducts.filter(product => 
+          product.price >= filters.minPrice
+        );
       }
       if (filters.maxPrice < 1000000) {
-        params.append('maxPrice', filters.maxPrice.toString());
-      }
-      if (filters.search) {
-        params.append('search', encodeURIComponent(filters.search));
+        filteredProducts = filteredProducts.filter(product => 
+          product.price <= filters.maxPrice
+        );
       }
 
-      const response = await fetch(`http://localhost:5000/api/products?${params}`);
-      const data: ProductResponse = await response.json();
-      
-      setProducts(data.products);
-      setPagination(data.pagination);
+      // 검색 필터링
+      if (filters.search) {
+        const searchLower = filters.search.toLowerCase();
+        filteredProducts = filteredProducts.filter(product => 
+          product.name.toLowerCase().includes(searchLower) ||
+          product.description.toLowerCase().includes(searchLower)
+        );
+      }
+
+      // 정렬
+      filteredProducts.sort((a, b) => {
+        switch (filters.sortBy) {
+          case 'name':
+            return filters.sortOrder === 'asc' ? 
+              a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+          case 'price':
+            return filters.sortOrder === 'asc' ? 
+              a.price - b.price : b.price - a.price;
+          case 'createdAt':
+          default:
+            return filters.sortOrder === 'asc' ? 
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() :
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }
+      });
+
+      // 페이지네이션
+      const limit = 12;
+      const totalCount = filteredProducts.length;
+      const totalPages = Math.ceil(totalCount / limit);
+      const startIndex = (page - 1) * limit;
+      const paginatedProducts = filteredProducts.slice(startIndex, startIndex + limit);
+
+      setProducts(paginatedProducts);
+      setPagination({
+        currentPage: page,
+        totalPages,
+        totalCount,
+        limit,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      });
+
     } catch (error) {
       console.error('제품 데이터를 가져오는데 실패했습니다:', error);
     } finally {

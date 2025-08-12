@@ -112,7 +112,7 @@ export interface RegisterData {
   marketingConsent?: boolean;
 }
 
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
@@ -204,7 +204,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const { accessToken } = getStoredTokens();
       
       if (!accessToken) {
-        dispatch({ type: 'AUTH_FAILURE', payload: 'No token found' });
+        // No token is a normal state for logged-out users, not an error
+        dispatch({ type: 'LOGOUT' });
         return;
       }
 

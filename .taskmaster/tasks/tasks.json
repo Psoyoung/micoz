@@ -3,22 +3,22 @@
     "tasks": [
       {
         "id": 1,
-        "title": "Setup Project Repository and Base Architecture",
-        "description": "Initialize the project repository with React.js 18 frontend and Node.js 18 backend structure following the technical requirements specified in the PRD.",
-        "details": "1. Create a monorepo structure with separate frontend and backend directories\n2. Frontend setup:\n   - Initialize React 18 with TypeScript\n   - Configure Styled-components for styling\n   - Setup Redux Toolkit for state management\n   - Configure React Router v6\n   - Install Framer Motion for animations\n3. Backend setup:\n   - Initialize Node.js 18 with Express.js\n   - Configure PostgreSQL connection with Prisma ORM\n   - Setup basic JWT authentication structure\n   - Configure AWS S3 connection for file storage\n4. Setup development environment:\n   - Configure ESLint and Prettier\n   - Setup Git hooks with Husky\n   - Create Docker configuration for development environment",
-        "testStrategy": "1. Verify all dependencies are correctly installed and working\n2. Ensure the development server starts without errors\n3. Validate the connection between frontend and backend\n4. Test database connection and basic CRUD operations\n5. Verify AWS S3 connection for file uploads",
+        "title": "프로젝트 저장소 및 기본 아키텍처 설정",
+        "description": "PRD에 명시된 기술 요구사항에 따라 React.js 18 프론트엔드와 Node.js 18 백엔드 구조로 프로젝트 저장소를 초기화합니다.",
+        "details": "1. 프론트엔드와 백엔드 디렉토리를 분리한 모노레포 구조 생성\n2. 프론트엔드 설정:\n   - TypeScript와 함께 React 18 초기화\n   - 스타일링을 위한 Styled-components 설정\n   - 상태 관리를 위한 Redux Toolkit 설정\n   - React Router v6 설정\n   - 애니메이션을 위한 Framer Motion 설치\n3. 백엔드 설정:\n   - Express.js와 함께 Node.js 18 초기화\n   - Prisma ORM을 사용한 PostgreSQL 연결 설정\n   - 기본 JWT 인증 구조 설정\n   - 파일 저장을 위한 AWS S3 연결 설정\n4. 개발 환경 설정:\n   - ESLint 및 Prettier 설정\n   - Husky를 사용한 Git hooks 설정\n   - 개발 환경용 Docker 설정 생성",
+        "testStrategy": "1. 모든 의존성이 올바르게 설치되고 작동하는지 확인\n2. 개발 서버가 오류 없이 시작되는지 확인\n3. 프론트엔드와 백엔드 간 연결 검증\n4. 데이터베이스 연결 및 기본 CRUD 작업 테스트\n5. 파일 업로드를 위한 AWS S3 연결 확인",
         "priority": "high",
         "dependencies": [],
         "status": "done",
         "subtasks": [
           {
             "id": 1,
-            "title": "Initialize Monorepo Structure and Basic Configuration",
-            "description": "Create the foundational monorepo structure with separate frontend and backend directories, initialize basic package.json files, and setup workspace configuration.",
+            "title": "모노레포 구조 및 기본 설정 초기화",
+            "description": "프론트엔드와 백엔드 디렉토리를 분리한 기초 모노레포 구조를 생성하고, 기본 package.json 파일을 초기화하며, 워크스페이스 설정을 설정합니다.",
             "dependencies": [],
-            "details": "Create root directory structure with /frontend and /backend folders. Initialize package.json in root with workspace configuration for monorepo management. Setup basic .gitignore, README.md, and environment variable templates (.env.example). Configure npm/yarn workspaces to manage dependencies across both frontend and backend.",
+            "details": "/frontend와 /backend 폴더가 있는 루트 디렉토리 구조를 생성합니다. 모노레포 관리를 위한 워크스페이스 설정으로 루트에 package.json을 초기화합니다. 기본 .gitignore, README.md, 환경변수 템플릿 (.env.example)을 설정합니다. 프론트엔드와 백엔드 모두에서 의존성을 관리하기 위해 npm/yarn 워크스페이스를 설정합니다.",
             "status": "done",
-            "testStrategy": "Verify directory structure is created correctly, package.json files are valid, and workspace commands execute without errors"
+            "testStrategy": "디렉토리 구조가 올바르게 생성되었는지, package.json 파일이 유효한지, 워크스페이스 명령어가 오류 없이 실행되는지 확인"
           },
           {
             "id": 2,
@@ -123,10 +123,10 @@
       },
       {
         "id": 2,
-        "title": "Implement Design System and UI Components",
-        "description": "Create a comprehensive design system based on the specified color palette, typography, and UI components that align with MICOZ's brand identity.",
-        "details": "1. Create a design tokens file with the specified color palette:\n   - Primary: Deep Forest Green (#2C5F41), Sage Green (#87A96B), Soft Mint (#B8D4C6)\n   - Secondary: Warm Beige (#F5F1ED), Ivory White (#FEFCF8), Charcoal Grey (#2B2B2B)\n   - Accent: Rose Gold (#E8B4A0), Soft Coral (#F2B5A7)\n2. Setup typography system:\n   - Import and configure Pretendard (한글), Inter (영문) as primary fonts\n   - Import and configure Noto Serif KR (한글), Playfair Display (영문) as secondary fonts\n   - Create typography scale as specified in the PRD\n3. Build reusable UI components:\n   - Button system (Primary, Secondary, Text buttons)\n   - Card system (Product, Story, Review cards)\n   - Form elements (Input fields, Select boxes, Checkboxes/Radio buttons)\n   - Navigation components\n   - Modal and dialog components\n4. Create a Storybook to document all components",
-        "testStrategy": "1. Visual regression testing for all UI components\n2. Accessibility testing to ensure WCAG compliance\n3. Responsive design testing across different device sizes\n4. Cross-browser compatibility testing\n5. Storybook documentation review",
+        "title": "디자인 시스템 및 UI 컴포넌트 구현",
+        "description": "MICOZ의 브랜드 아이덴티티에 맞는 지정된 색상 팔레트, 타이포그래피, UI 컴포넌트를 기반으로 포괄적인 디자인 시스템을 생성합니다.",
+        "details": "1. 지정된 색상 팔레트로 디자인 토큰 파일 생성:\n   - Primary: Deep Forest Green (#2C5F41), Sage Green (#87A96B), Soft Mint (#B8D4C6)\n   - Secondary: Warm Beige (#F5F1ED), Ivory White (#FEFCF8), Charcoal Grey (#2B2B2B)\n   - Accent: Rose Gold (#E8B4A0), Soft Coral (#F2B5A7)\n2. 타이포그래피 시스템 설정:\n   - 기본 글꼴로 Pretendard (한글), Inter (영문) 가져오기 및 설정\n   - 보조 글꼴로 Noto Serif KR (한글), Playfair Display (영문) 가져오기 및 설정\n   - PRD에 명시된 타이포그래피 스케일 생성\n3. 재사용 가능한 UI 컴포넌트 구축:\n   - Button 시스템 (Primary, Secondary, Text 버튼)\n   - Card 시스템 (Product, Story, Review 카드)\n   - Form 요소 (Input 필드, Select 박스, Checkboxes/Radio 버튼)\n   - 내비게이션 컴포넌트\n   - Modal 및 대화상자 컴포넌트\n4. 모든 컴포넌트를 문서화하기 위한 Storybook 생성",
+        "testStrategy": "1. 모든 UI 컴포넌트에 대한 비주얼 회귀 테스트\n2. WCAG 준수를 위한 접근성 테스트\n3. 다양한 기기 크기에서 반응형 디자인 테스트\n4. 크로스 브라우저 호환성 테스트\n5. Storybook 문서화 검토",
         "priority": "high",
         "dependencies": [
           1
@@ -136,10 +136,10 @@
       },
       {
         "id": 3,
-        "title": "Develop Main Page and Navigation Structure",
-        "description": "Implement the main page with hero section, product showcases, and navigation structure according to the information architecture defined in the PRD.",
-        "details": "1. Create responsive header with navigation menu following the IA structure:\n   - Brand Story\n   - Products (with dropdown for categories)\n   - Collections\n   - Beauty Guide\n   - Community\n   - Customer Service\n2. Implement hero section with brand philosophy visuals and messaging\n3. Create sections for:\n   - New product introduction with storytelling\n   - Bestseller product curation\n   - Brand story preview\n   - Customer reviews\n4. Implement responsive footer with:\n   - Site map\n   - Contact information\n   - Social media links\n   - Newsletter subscription\n5. Ensure smooth animations using Framer Motion for transitions and scroll effects",
-        "testStrategy": "1. User testing for navigation usability\n2. Performance testing for image loading and animations\n3. Responsive design testing across devices\n4. A/B testing for hero section messaging\n5. Verify all links and navigation paths",
+        "title": "메인 페이지 및 내비게이션 구조 개발",
+        "description": "PRD에 정의된 정보 아키텍처에 따라 히어로 섹션, 제품 쇼케이스, 내비게이션 구조가 있는 메인 페이지를 구현합니다.",
+        "details": "1. IA 구조를 따른 내비게이션 메뉴가 있는 반응형 헤더 생성:\n   - 브랜드 스토리\n   - 제품 (카테고리별 드롭다운 포함)\n   - 컶렉션\n   - 뷰티 가이드\n   - 커뮤니티\n   - 고객 서비스\n2. 브랜드 철학 비주얼과 메시지가 있는 히어로 섹션 구현\n3. 다음 섹션들 생성:\n   - 스토리텔링과 함께한 신제품 소개\n   - 베스트셀러 제품 큐레이션\n   - 브랜드 스토리 미리보기\n   - 고객 리뷰\n4. 다음이 포함된 반응형 푸터 구현:\n   - 사이트 맵\n   - 연락처 정보\n   - 소셜 미디어 링크\n   - 뉴스레터 구독\n5. 전환 및 스크롤 효과를 위해 Framer Motion을 사용한 부드러운 애니메이션 보장",
+        "testStrategy": "1. 내비게이션 사용성에 대한 사용자 테스트\n2. 이미지 로딩 및 애니메이션 성능 테스트\n3. 기기별 반응형 디자인 테스트\n4. 히어로 섹션 메시지에 대한 A/B 테스트\n5. 모든 링크 및 내비게이션 경로 확인",
         "priority": "high",
         "dependencies": [
           2
@@ -149,10 +149,10 @@
       },
       {
         "id": 4,
-        "title": "Implement Product Catalog and Category Pages",
-        "description": "Develop the product catalog structure with category pages for skincare, makeup, and special care products as defined in the information architecture.",
-        "details": "1. Create product category pages with filtering options:\n   - Skincare (Cleanser, Toner, Serum, Moisturizer, Suncare)\n   - Makeup (Base, Point, Lip products)\n   - Special Care\n2. Implement filtering and sorting functionality:\n   - Filter by product type, concerns, ingredients\n   - Sort by price, popularity, newest\n3. Design product card components with:\n   - Product image\n   - Product name\n   - Brief description\n   - Price\n   - Rating\n4. Implement pagination or infinite scroll for product listings\n5. Create Redux slices for managing product catalog state\n6. Implement API integration with backend for fetching product data",
-        "testStrategy": "1. Test filtering and sorting functionality\n2. Verify product data is correctly displayed\n3. Performance testing for image loading\n4. Test pagination/infinite scroll behavior\n5. Verify responsive layout on different devices\n6. API integration tests",
+        "title": "제품 카탈로그 및 카테고리 페이지 구현",
+        "description": "정보 아키텍처에 정의된 스킨케어, 메이크업, 스페셜 케어 제품을 위한 카테고리 페이지와 함께 제품 카탈로그 구조를 개발합니다.",
+        "details": "1. 필터링 옵션이 있는 제품 카테고리 페이지 생성:\n   - 스킨케어 (클렌저, 토너, 세럼, 모이스처라이저, 선케어)\n   - 메이크업 (베이스, 포인트, 립 제품)\n   - 스페셜 케어\n2. 필터링 및 정렬 기능 구현:\n   - 제품 유형, 고민, 성분별 필터\n   - 가격, 인기도, 최신순 정렬\n3. 다음을 포함한 제품 카드 컴포넌트 디자인:\n   - 제품 이미지\n   - 제품명\n   - 간단한 설명\n   - 가격\n   - 평점\n4. 제품 목록을 위한 페이지네이션 또는 무한 스크롤 구현\n5. 제품 카탈로그 상태 관리를 위한 Redux slice 생성\n6. 제품 데이터 가져오기를 위한 백엔드 API 통합 구현",
+        "testStrategy": "1. 필터링 및 정렬 기능 테스트\n2. 제품 데이터가 올바르게 표시되는지 확인\n3. 이미지 로딩 성능 테스트\n4. 페이지네이션/무한 스크롤 동작 테스트\n5. 다양한 기기에서 반응형 레이아웃 확인\n6. API 통합 테스트",
         "priority": "high",
         "dependencies": [
           2,
@@ -163,10 +163,10 @@
       },
       {
         "id": 5,
-        "title": "Develop Product Detail Page",
-        "description": "Create the product detail page with comprehensive product information, usage guides, customer reviews, and related product recommendations.",
-        "details": "1. Design and implement product detail page layout with:\n   - Product image gallery with zoom functionality\n   - Product name, price, and add to cart options\n   - Detailed product description\n   - Ingredient information with visual infographics\n   - Usage guide with visual steps\n2. Implement customer review section:\n   - Rating system\n   - Photo reviews\n   - Detailed written reviews\n   - Review filtering options\n3. Create AI-based personalized product recommendation section\n4. Implement AR virtual try-on feature for makeup products using WebRTC + AR.js\n5. Add social sharing functionality\n6. Implement add to cart and wishlist functionality",
-        "testStrategy": "1. User testing for product information clarity\n2. Test AR functionality across different devices\n3. Verify review submission and display\n4. Test recommendation algorithm accuracy\n5. Performance testing for image gallery\n6. Verify add to cart and wishlist functionality",
+        "title": "제품 상세 페이지 개발",
+        "description": "포괄적인 제품 정보, 사용법 가이드, 고객 리뷰, 관련 제품 추천이 있는 제품 상세 페이지를 생성합니다.",
+        "details": "1. 다음을 포함한 제품 상세 페이지 레이아웃 디자인 및 구현:\n   - 줄 기능이 있는 제품 이미지 갤러리\n   - 제품명, 가격, 장바구니 담기 옵션\n   - 상세한 제품 설명\n   - 비주얼 인포그래픽이 있는 성분 정보\n   - 비주얼 단계가 있는 사용법 가이드\n2. 고객 리뷰 섹션 구현:\n   - 평점 시스템\n   - 사진 리뷰\n   - 상세한 서면 리뷰\n   - 리뷰 필터링 옵션\n3. AI 기반 개인화된 제품 추천 섹션 생성\n4. WebRTC + AR.js를 사용한 메이크업 제품용 AR 가상 체험 기능 구현\n5. 소셜 공유 기능 추가\n6. 장바구니 담기 및 위시리스트 기능 구현",
+        "testStrategy": "1. 제품 정보 명확성에 대한 사용자 테스트\n2. 다양한 기기에서 AR 기능 테스트\n3. 리뷰 제출 및 표시 확인\n4. 추천 알고리즘 정확도 테스트\n5. 이미지 갤러리 성능 테스트\n6. 장바구니 담기 및 위시리스트 기능 확인",
         "priority": "high",
         "dependencies": [
           2,
@@ -177,10 +177,10 @@
       },
       {
         "id": 6,
-        "title": "Implement Brand Story and Content Pages",
-        "description": "Develop the brand story pages and content strategy implementation with storytelling elements that convey MICOZ's brand identity and philosophy.",
-        "details": "1. Create brand story pages with sections for:\n   - About MICOZ\n   - Brand Philosophy\n   - Sustainability\n2. Implement visual storytelling with:\n   - Parallax scrolling effects\n   - Animation sequences\n   - Interactive elements\n3. Develop beauty guide content pages:\n   - Skincare guides\n   - Makeup tutorials\n   - Product usage instructions\n4. Create content management system for:\n   - Beauty editorials\n   - Ingredient stories\n   - User stories\n   - Expert interviews\n5. Implement media-rich content display with optimized image loading",
-        "testStrategy": "1. Content review for brand alignment\n2. Performance testing for media-rich pages\n3. User testing for storytelling effectiveness\n4. Accessibility testing for all content\n5. Responsive design testing for content pages\n6. SEO testing for content discoverability",
+        "title": "브랜드 스토리 및 콘텐츠 페이지 구현",
+        "description": "MICOZ의 브랜드 아이덴티티와 철학을 전달하는 스토리텔링 요소와 함께 브랜드 스토리 페이지와 콘텐츠 전략 구현을 개발합니다.",
+        "details": "1. 다음 섹션이 있는 브랜드 스토리 페이지 생성:\n   - MICOZ 소개\n   - 브랜드 철학\n   - 지속가능성\n2. 다음을 포함한 비주얼 스토리텔링 구현:\n   - 패럴랙스 스크롤링 효과\n   - 애니메이션 시퀀스\n   - 인터렉티브 요소\n3. 뷰티 가이드 콘텐츠 페이지 개발:\n   - 스킨케어 가이드\n   - 메이크업 튜토리얼\n   - 제품 사용법 안내\n4. 다음을 위한 콘텐츠 관리 시스템 생성:\n   - 뷰티 에디토리얼\n   - 성분 스토리\n   - 사용자 스토리\n   - 전문가 인터뷰\n5. 이미지 로딩 최적화와 함께 미디어 리치 콘텐츠 표시 구현",
+        "testStrategy": "1. 브랜드 일치성을 위한 콘텐츠 검토\n2. 미디어 리치 페이지 성능 테스트\n3. 스토리텔링 효과성에 대한 사용자 테스트\n4. 모든 콘텐츠에 대한 접근성 테스트\n5. 콘텐츠 페이지의 반응형 디자인 테스트\n6. 콘텐츠 발견 가능성을 위한 SEO 테스트",
         "priority": "medium",
         "dependencies": [
           2,
@@ -191,10 +191,10 @@
       },
       {
         "id": 7,
-        "title": "Implement User Authentication and Account Management",
-        "description": "Develop user authentication system with JWT and refresh tokens, along with comprehensive account management functionality.",
-        "details": "1. Implement authentication system:\n   - Registration with email verification\n   - Login with JWT + Refresh Token\n   - Social login options\n   - Password reset functionality\n2. Create user profile management:\n   - Personal information management\n   - Shipping address management\n   - Payment method storage (securely)\n   - Order history\n3. Implement personalization features:\n   - Skin type and concerns profile\n   - Product preferences\n   - Wishlist management\n4. Develop notification system:\n   - Order status updates\n   - Restock notifications\n   - Personalized product recommendations\n5. Implement privacy and data management in compliance with regulations",
-        "testStrategy": "1. Security testing for authentication system\n2. Test token refresh mechanism\n3. Verify email verification process\n4. Test user profile CRUD operations\n5. Verify password reset functionality\n6. Test notification delivery\n7. Perform data privacy compliance audit",
+        "title": "사용자 인증 및 계정 관리 구현",
+        "description": "JWT 및 리프레시 토큰을 사용한 사용자 인증 시스템과 포괄적인 계정 관리 기능을 개발합니다.",
+        "details": "1. 인증 시스템 구현:\n   - 이메일 인증을 포함한 회원가입\n   - JWT + 리프레시 토큰을 사용한 로그인\n   - 소셜 로그인 옵션\n   - 비밀번호 재설정 기능\n2. 사용자 프로필 관리 생성:\n   - 개인정보 관리\n   - 배송지 주소 관리\n   - 결제 수단 저장 (보안)\n   - 주문 내역\n3. 개인화 기능 구현:\n   - 피부 타입 및 고민 프로필\n   - 제품 선호도\n   - 위시리스트 관리\n4. 알림 시스템 개발:\n   - 주문 상태 업데이트\n   - 재입고 알림\n   - 개인화된 제품 추천\n5. 규정 준수를 위한 개인정보 및 데이터 관리 구현",
+        "testStrategy": "1. 인증 시스템 보안 테스트\n2. 토큰 리프레시 메커니즘 테스트\n3. 이메일 인증 과정 확인\n4. 사용자 프로필 CRUD 작업 테스트\n5. 비밀번호 재설정 기능 확인\n6. 알림 전송 테스트\n7. 데이터 개인정보 준수 감사 수행",
         "priority": "high",
         "dependencies": [
           1
@@ -204,10 +204,10 @@
       },
       {
         "id": 8,
-        "title": "Implement Shopping Cart and Checkout Process",
-        "description": "Develop the shopping cart functionality and streamlined checkout process with multiple payment options and shipping integrations.",
-        "details": "1. Create shopping cart functionality:\n   - Add/remove products\n   - Update quantities\n   - Apply promotion codes\n   - Calculate totals and discounts\n2. Implement checkout process:\n   - Multi-step checkout with progress indicator\n   - Address selection/input\n   - Shipping method selection\n   - Payment method selection\n3. Integrate payment gateways:\n   - TossPayments\n   - KakaoPay\n   - NaverPay\n4. Implement shipping calculation and tracking:\n   - CJ Logistics API integration\n   - Lotte Logistics API integration\n5. Create order confirmation and tracking system\n6. Implement inventory management to prevent overselling",
-        "testStrategy": "1. Test complete purchase flow end-to-end\n2. Verify payment gateway integrations\n3. Test shipping calculation accuracy\n4. Verify inventory updates after purchase\n5. Test promotion code application\n6. Verify order confirmation emails\n7. Test order tracking functionality",
+        "title": "쇼핑카트 및 결제 프로세스 구현",
+        "description": "다양한 결제 옵션과 배송 통합을 포함한 쇼핑카트 기능과 간소화된 결제 프로세스를 개발합니다.",
+        "details": "1. 쇼핑카트 기능 생성:\n   - 제품 추가/제거\n   - 수량 업데이트\n   - 프로모션 코드 적용\n   - 총 금액 및 할인 계산\n2. 결제 프로세스 구현:\n   - 진행 표시기가 있는 다단계 결제\n   - 주소 선택/입력\n   - 배송 방법 선택\n   - 결제 수단 선택\n3. 결제 게이트웨이 통합:\n   - TossPayments\n   - KakaoPay\n   - NaverPay\n4. 배송비 계산 및 추적 구현:\n   - CJ 대한통운 API 통합\n   - 롯데택배 API 통합\n5. 주문 확인 및 추적 시스템 생성\n6. 과다판매 방지를 위한 재고 관리 구현",
+        "testStrategy": "1. 전체 구매 플로우 종단 간 테스트\n2. 결제 게이트웨이 통합 확인\n3. 배송비 계산 정확성 테스트\n4. 구매 후 재고 업데이트 확인\n5. 프로모션 코드 적용 테스트\n6. 주문 확인 이메일 확인\n7. 주문 추적 기능 테스트",
         "priority": "high",
         "dependencies": [
           4,
@@ -369,7 +369,7 @@
           4,
           7
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -412,7 +412,7 @@
             "title": "Build Recommendation UI Components",
             "description": "Create React components for displaying personalized product recommendations",
             "details": "- RecommendedProducts component for homepage\n- PersonalizedRecommendations component for user profile\n- SimilarProducts component for product pages\n- RecentlyViewed component for browsing history\n- WishlistRecommendations component based on wishlist\n- RecommendationCarousel component for various sections",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
             "parentTaskId": 10
           },
@@ -421,7 +421,7 @@
             "title": "Implement Analytics and A/B Testing",
             "description": "Create analytics system to track search and recommendation performance with A/B testing framework",
             "details": "- Implement search analytics (queries, results, clicks)\n- Track recommendation performance metrics\n- Create A/B testing framework for algorithms\n- Build analytics dashboard for insights\n- Implement conversion tracking\n- Setup performance monitoring",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
             "parentTaskId": 10
           }
@@ -430,7 +430,7 @@
     ],
     "metadata": {
       "created": "2025-07-28T06:44:12.684Z",
-      "updated": "2025-08-01T08:16:50.892Z",
+      "updated": "2025-08-02T08:19:47.287Z",
       "description": "Tasks for master context"
     }
   }

@@ -408,7 +408,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           {showAnswerForm && (
             <Button
               variant="secondary"
-              size="sm"
+              size="small"
               onClick={() => setShowAnswerInput(!showAnswerInput)}
             >
               답변하기

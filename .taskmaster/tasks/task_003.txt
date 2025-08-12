@@ -1,33 +1,33 @@
 # Task ID: 3
-# Title: Develop Main Page and Navigation Structure
+# Title: 메인 페이지 및 내비게이션 구조 개발
 # Status: done
 # Dependencies: 2
 # Priority: high
-# Description: Implement the main page with hero section, product showcases, and navigation structure according to the information architecture defined in the PRD.
+# Description: PRD에 정의된 정보 아키텍처에 따라 히어로 섹션, 제품 쇼케이스, 내비게이션 구조가 있는 메인 페이지를 구현합니다.
 # Details:
-1. Create responsive header with navigation menu following the IA structure:
-   - Brand Story
-   - Products (with dropdown for categories)
-   - Collections
-   - Beauty Guide
-   - Community
-   - Customer Service
-2. Implement hero section with brand philosophy visuals and messaging
-3. Create sections for:
-   - New product introduction with storytelling
-   - Bestseller product curation
-   - Brand story preview
-   - Customer reviews
-4. Implement responsive footer with:
-   - Site map
-   - Contact information
-   - Social media links
-   - Newsletter subscription
-5. Ensure smooth animations using Framer Motion for transitions and scroll effects
+1. IA 구조를 따른 내비게이션 메뉴가 있는 반응형 헤더 생성:
+   - 브랜드 스토리
+   - 제품 (카테고리별 드롭다운 포함)
+   - 컶렉션
+   - 뷰티 가이드
+   - 커뮤니티
+   - 고객 서비스
+2. 브랜드 철학 비주얼과 메시지가 있는 히어로 섹션 구현
+3. 다음 섹션들 생성:
+   - 스토리텔링과 함께한 신제품 소개
+   - 베스트셀러 제품 큐레이션
+   - 브랜드 스토리 미리보기
+   - 고객 리뷰
+4. 다음이 포함된 반응형 푸터 구현:
+   - 사이트 맵
+   - 연락처 정보
+   - 소셜 미디어 링크
+   - 뉴스레터 구독
+5. 전환 및 스크롤 효과를 위해 Framer Motion을 사용한 부드러운 애니메이션 보장
 
 # Test Strategy:
-1. User testing for navigation usability
-2. Performance testing for image loading and animations
-3. Responsive design testing across devices
-4. A/B testing for hero section messaging
-5. Verify all links and navigation paths
+1. 내비게이션 사용성에 대한 사용자 테스트
+2. 이미지 로딩 및 애니메이션 성능 테스트
+3. 기기별 반응형 디자인 테스트
+4. 히어로 섹션 메시지에 대한 A/B 테스트
+5. 모든 링크 및 내비게이션 경로 확인

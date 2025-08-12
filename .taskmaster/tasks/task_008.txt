@@ -1,38 +1,38 @@
 # Task ID: 8
-# Title: Implement Shopping Cart and Checkout Process
+# Title: 쇼핑카트 및 결제 프로세스 구현
 # Status: done
 # Dependencies: 4, 5, 7
 # Priority: high
-# Description: Develop the shopping cart functionality and streamlined checkout process with multiple payment options and shipping integrations.
+# Description: 다양한 결제 옵션과 배송 통합을 포함한 쇼핑카트 기능과 간소화된 결제 프로세스를 개발합니다.
 # Details:
-1. Create shopping cart functionality:
-   - Add/remove products
-   - Update quantities
-   - Apply promotion codes
-   - Calculate totals and discounts
-2. Implement checkout process:
-   - Multi-step checkout with progress indicator
-   - Address selection/input
-   - Shipping method selection
-   - Payment method selection
-3. Integrate payment gateways:
+1. 쇼핑카트 기능 생성:
+   - 제품 추가/제거
+   - 수량 업데이트
+   - 프로모션 코드 적용
+   - 총 금액 및 할인 계산
+2. 결제 프로세스 구현:
+   - 진행 표시기가 있는 다단계 결제
+   - 주소 선택/입력
+   - 배송 방법 선택
+   - 결제 수단 선택
+3. 결제 게이트웨이 통합:
    - TossPayments
    - KakaoPay
    - NaverPay
-4. Implement shipping calculation and tracking:
-   - CJ Logistics API integration
-   - Lotte Logistics API integration
-5. Create order confirmation and tracking system
-6. Implement inventory management to prevent overselling
+4. 배송비 계산 및 추적 구현:
+   - CJ 대한통운 API 통합
+   - 롯데택배 API 통합
+5. 주문 확인 및 추적 시스템 생성
+6. 과다판매 방지를 위한 재고 관리 구현
 
 # Test Strategy:
-1. Test complete purchase flow end-to-end
-2. Verify payment gateway integrations
-3. Test shipping calculation accuracy
-4. Verify inventory updates after purchase
-5. Test promotion code application
-6. Verify order confirmation emails
-7. Test order tracking functionality
+1. 전체 구매 플로우 종단 간 테스트
+2. 결제 게이트웨이 통합 확인
+3. 배송비 계산 정확성 테스트
+4. 구매 후 재고 업데이트 확인
+5. 프로모션 코드 적용 테스트
+6. 주문 확인 이메일 확인
+7. 주문 추적 기능 테스트
 
 # Subtasks:
 ## 1. Implement Shopping Cart State Management and Core Functionality [done]

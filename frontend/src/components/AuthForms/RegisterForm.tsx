@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { useAuth, RegisterData } from '../../contexts/AuthContext';
@@ -103,29 +102,6 @@ const TermsSection = styled.div`
   border: 1px solid ${({ theme }) => theme.colors.gray[200]};
 `;
 
-const FormFooter = styled.div`
-  text-align: center;
-  margin-top: ${({ theme }) => theme.spacing[6]};
-  padding-top: ${({ theme }) => theme.spacing[6]};
-  border-top: 1px solid ${({ theme }) => theme.colors.gray[200]};
-`;
-
-const LoginPrompt = styled.p`
-  color: ${({ theme }) => theme.colors.secondary.charcoal};
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
-  margin-bottom: ${({ theme }) => theme.spacing[3]};
-`;
-
-const LoginLink = styled(Link)`
-  color: ${({ theme }) => theme.colors.primary.sage};
-  text-decoration: none;
-  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-  transition: color ${({ theme }) => theme.transitions.fast};
-
-  &:hover {
-    color: ${({ theme }) => theme.colors.primary.deepForest};
-  }
-`;
 
 const genderOptions = [
   { value: '', label: '선택하지 않음' },
@@ -177,6 +153,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess, className
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const { register, error, clearError } = useAuth();
+
+  // Clear any existing auth errors when component mounts
+  React.useEffect(() => {
+    if (error && error.includes('No token found')) {
+      clearError();
+    }
+  }, [error, clearError]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -268,10 +251,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess, className
           </small>
         </SuccessMessage>
         
-        <FormFooter>
-          <LoginPrompt>이미 인증을 완료하셨나요?</LoginPrompt>
-          <LoginLink to="/login">로그인하기</LoginLink>
-        </FormFooter>
       </FormContainer>
     );
   }
@@ -457,10 +436,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess, className
         </Button>
       </Form>
 
-      <FormFooter>
-        <LoginPrompt>이미 계정이 있으신가요?</LoginPrompt>
-        <LoginLink to="/login">로그인하기</LoginLink>
-      </FormFooter>
     </FormContainer>
   );
 };

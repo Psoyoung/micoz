@@ -33,12 +33,14 @@ export interface Product {
 export interface ProductVariant {
   id: string;
   name: string;
+  sku?: string;
   price: number;
   inventory: number;
 }
 
 export interface ProductCardProps {
   product: Product;
+  layout?: 'vertical' | 'horizontal';
   onProductClick?: (product: Product) => void;
   onAddToCart?: (product: Product) => void;
   onToggleWishlist?: (product: Product) => void;

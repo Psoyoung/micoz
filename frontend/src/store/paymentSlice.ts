@@ -36,7 +36,7 @@ export const processPayment = createAsyncThunk(
   async (_, { getState, rejectWithValue }) => {
     try {
       const state = getState() as RootState;
-      const { cart, checkout, auth } = state;
+      const { cart, checkout } = state;
       
       // 필수 정보 검증
       if (!checkout.selectedAddress) {

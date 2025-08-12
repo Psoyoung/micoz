@@ -1,30 +1,30 @@
 # Task ID: 5
-# Title: Develop Product Detail Page
+# Title: 제품 상세 페이지 개발
 # Status: done
 # Dependencies: 2, 4
 # Priority: high
-# Description: Create the product detail page with comprehensive product information, usage guides, customer reviews, and related product recommendations.
+# Description: 포괄적인 제품 정보, 사용법 가이드, 고객 리뷰, 관련 제품 추천이 있는 제품 상세 페이지를 생성합니다.
 # Details:
-1. Design and implement product detail page layout with:
-   - Product image gallery with zoom functionality
-   - Product name, price, and add to cart options
-   - Detailed product description
-   - Ingredient information with visual infographics
-   - Usage guide with visual steps
-2. Implement customer review section:
-   - Rating system
-   - Photo reviews
-   - Detailed written reviews
-   - Review filtering options
-3. Create AI-based personalized product recommendation section
-4. Implement AR virtual try-on feature for makeup products using WebRTC + AR.js
-5. Add social sharing functionality
-6. Implement add to cart and wishlist functionality
+1. 다음을 포함한 제품 상세 페이지 레이아웃 디자인 및 구현:
+   - 줄 기능이 있는 제품 이미지 갤러리
+   - 제품명, 가격, 장바구니 담기 옵션
+   - 상세한 제품 설명
+   - 비주얼 인포그래픽이 있는 성분 정보
+   - 비주얼 단계가 있는 사용법 가이드
+2. 고객 리뷰 섹션 구현:
+   - 평점 시스템
+   - 사진 리뷰
+   - 상세한 서면 리뷰
+   - 리뷰 필터링 옵션
+3. AI 기반 개인화된 제품 추천 섹션 생성
+4. WebRTC + AR.js를 사용한 메이크업 제품용 AR 가상 체험 기능 구현
+5. 소셜 공유 기능 추가
+6. 장바구니 담기 및 위시리스트 기능 구현
 
 # Test Strategy:
-1. User testing for product information clarity
-2. Test AR functionality across different devices
-3. Verify review submission and display
-4. Test recommendation algorithm accuracy
-5. Performance testing for image gallery
-6. Verify add to cart and wishlist functionality
+1. 제품 정보 명확성에 대한 사용자 테스트
+2. 다양한 기기에서 AR 기능 테스트
+3. 리뷰 제출 및 표시 확인
+4. 추천 알고리즘 정확도 테스트
+5. 이미지 갤러리 성능 테스트
+6. 장바구니 담기 및 위시리스트 기능 확인

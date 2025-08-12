@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
 import { Provider } from 'react-redux';
@@ -12,31 +12,69 @@ import { HomePage } from './pages/HomePage';
 import { SkincareCategory, MakeupCategory, BodycareCategory, FragranceCategory, ProductDetailPage } from './pages';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { AddressManagementPage } from './pages/AddressManagementPage';
+import { AuthProvider } from './contexts/AuthContext';
+
+// Lazy load auth pages for better performance
+const LoginPage = React.lazy(() => import('./pages/LoginPage').then(module => ({ default: module.LoginPage })));
+const RegisterPage = React.lazy(() => import('./pages/RegisterPage').then(module => ({ default: module.RegisterPage })));
 
 function App() {
   return (
     <Provider store={store}>
-      <ThemeProvider theme={theme}>
-        <GlobalStyles />
-        <Router>
-          <Header />
-          <main style={{ paddingTop: '80px' }}>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/skincare" element={<SkincareCategory />} />
-              <Route path="/makeup" element={<MakeupCategory />} />
-              <Route path="/bodycare" element={<BodycareCategory />} />
-              <Route path="/fragrance" element={<FragranceCategory />} />
-              <Route path="/product/:slug" element={<ProductDetailPage />} />
-              <Route path="/checkout" element={<CheckoutPage />} />
-              <Route path="/address" element={<AddressManagementPage />} />
-            </Routes>
-          </main>
-          <Footer />
-          <CartDrawer />
+      <AuthProvider>
+        <ThemeProvider theme={theme}>
+          <GlobalStyles />
+          <Router>
+          <Routes>
+            {/* Auth pages without header/footer */}
+            <Route path="/login" element={
+              <Suspense fallback={<div style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                height: '100vh',
+                backgroundColor: '#F5F1ED'
+              }}>로딩 중...</div>}>
+                <LoginPage />
+              </Suspense>
+            } />
+            <Route path="/register" element={
+              <Suspense fallback={<div style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                height: '100vh',
+                backgroundColor: '#F5F1ED'
+              }}>로딩 중...</div>}>
+                <RegisterPage />
+              </Suspense>
+            } />
+            
+            {/* Main app with header/footer */}
+            <Route path="/*" element={
+              <>
+                <Header />
+                <main style={{ paddingTop: '80px' }}>
+                  <Routes>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/skincare" element={<SkincareCategory />} />
+                    <Route path="/makeup" element={<MakeupCategory />} />
+                    <Route path="/bodycare" element={<BodycareCategory />} />
+                    <Route path="/fragrance" element={<FragranceCategory />} />
+                    <Route path="/product/:slug" element={<ProductDetailPage />} />
+                    <Route path="/checkout" element={<CheckoutPage />} />
+                    <Route path="/address" element={<AddressManagementPage />} />
+                  </Routes>
+                </main>
+                <Footer />
+                <CartDrawer />
+              </>
+            } />
+          </Routes>
           <ToastNotification />
-        </Router>
-      </ThemeProvider>
+          </Router>
+        </ThemeProvider>
+      </AuthProvider>
     </Provider>
   );
 }

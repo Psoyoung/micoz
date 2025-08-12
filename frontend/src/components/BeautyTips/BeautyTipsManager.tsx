@@ -258,8 +258,8 @@ export const BeautyTipsManager: React.FC<BeautyTipsManagerProps> = ({
   const loadTips = async () => {
     try {
       setLoading(true);
-      const [sortBy, sortOrder] = (filters.sortBy && filters.sortOrder) 
-        ? [filters.sortBy, filters.sortOrder]
+      const [sortBy, sortOrder]: ['createdAt' | 'upvotes' | 'views' | 'comments', 'desc' | 'asc'] = (filters.sortBy && filters.sortOrder) 
+        ? [filters.sortBy as 'createdAt' | 'upvotes' | 'views' | 'comments', filters.sortOrder as 'desc' | 'asc']
         : ['createdAt', 'desc'];
 
       const response = await beautyTipsService.getBeautyTips(
@@ -427,7 +427,7 @@ export const BeautyTipsManager: React.FC<BeautyTipsManagerProps> = ({
             <Select
               options={categories}
               value={filters.category || ''}
-              onChange={(value) => handleFilterChange('category', value)}
+              onChange={(value: string) => handleFilterChange('category', value)}
             />
           </div>
           <div>
@@ -435,7 +435,7 @@ export const BeautyTipsManager: React.FC<BeautyTipsManagerProps> = ({
             <Select
               options={difficulties}
               value={filters.difficulty || ''}
-              onChange={(value) => handleFilterChange('difficulty', value)}
+              onChange={(value: string) => handleFilterChange('difficulty', value)}
             />
           </div>
           <div>
@@ -443,7 +443,7 @@ export const BeautyTipsManager: React.FC<BeautyTipsManagerProps> = ({
             <Select
               options={skinTypes}
               value={filters.skinType || ''}
-              onChange={(value) => handleFilterChange('skinType', value)}
+              onChange={(value: string) => handleFilterChange('skinType', value)}
             />
           </div>
         </FilterGrid>
@@ -496,7 +496,7 @@ export const BeautyTipsManager: React.FC<BeautyTipsManagerProps> = ({
             <Pagination>
               <Button
                 variant="secondary"
-                size="sm"
+                size="small"
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
               >
@@ -507,7 +507,7 @@ export const BeautyTipsManager: React.FC<BeautyTipsManagerProps> = ({
               </PaginationInfo>
               <Button
                 variant="secondary"
-                size="sm"
+                size="small"
                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages}
               >

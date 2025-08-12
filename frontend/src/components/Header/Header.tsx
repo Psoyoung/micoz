@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled, { css } from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { toggleCart } from '../../store/cartSlice';
+import { AuthContext } from '../../contexts/AuthContext';
 
 export interface HeaderProps {
   className?: string;
@@ -87,6 +88,93 @@ const Badge = styled.div`
 const UserButton = styled(IconButton)`
   @media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
     display: none;
+  }
+`;
+
+const AuthButton = styled(motion(Link))`
+  padding: ${({ theme }) => theme.spacing[2]} ${({ theme }) => theme.spacing[4]};
+  border-radius: ${({ theme }) => theme.borderRadius.full};
+  text-decoration: none;
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  transition: all ${({ theme }) => theme.transitions.normal};
+  border: 1px solid transparent;
+  
+  @media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
+    display: none;
+  }
+`;
+
+const LoginButton = styled(AuthButton)`
+  color: ${({ theme }) => theme.colors.primary.sage};
+  border-color: ${({ theme }) => theme.colors.primary.sage};
+  
+  &:hover {
+    background: ${({ theme }) => theme.colors.primary.sage};
+    color: ${({ theme }) => theme.colors.secondary.ivory};
+  }
+`;
+
+const RegisterButton = styled(AuthButton)`
+  background: ${({ theme }) => theme.colors.primary.sage};
+  color: ${({ theme }) => theme.colors.secondary.ivory};
+  
+  &:hover {
+    background: ${({ theme }) => theme.colors.primary.deepForest};
+  }
+`;
+
+const UserMenuContainer = styled.div`
+  position: relative;
+`;
+
+const UserMenuButton = styled(IconButton)`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing[2]};
+  padding: ${({ theme }) => theme.spacing[2]};
+  
+  @media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
+    display: none;
+  }
+`;
+
+const UserName = styled.span`
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  color: ${({ theme }) => theme.colors.secondary.charcoal};
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+const UserDropdown = styled(motion.div)`
+  position: absolute;
+  top: 100%;
+  right: 0;
+  min-width: 180px;
+  background: ${({ theme }) => theme.colors.secondary.ivory};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  box-shadow: ${({ theme }) => theme.shadows.xl};
+  border: 1px solid ${({ theme }) => theme.colors.gray[200]};
+  padding: ${({ theme }) => theme.spacing[2]};
+  z-index: ${({ theme }) => theme.zIndex.dropdown};
+`;
+
+const UserDropdownItem = styled(motion.button)`
+  width: 100%;
+  padding: ${({ theme }) => theme.spacing[3]} ${({ theme }) => theme.spacing[4]};
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: ${({ theme }) => theme.borderRadius.base};
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  color: ${({ theme }) => theme.colors.secondary.charcoal};
+  cursor: pointer;
+  transition: all ${({ theme }) => theme.transitions.fast};
+  
+  &:hover {
+    background: ${({ theme }) => theme.colors.gray[100]};
   }
 `;
 
@@ -288,8 +376,10 @@ const navigationItems = [
 export const Header: React.FC<HeaderProps> = ({ className }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const auth = useContext(AuthContext);
   
   const { itemCount } = useAppSelector(state => state.cart);
   const { itemCount: wishlistCount } = useAppSelector(state => state.wishlist);
@@ -304,6 +394,12 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
 
   const handleCartToggle = () => {
     dispatch(toggleCart());
+  };
+
+  const handleLogout = () => {
+    auth?.logout();
+    setShowUserMenu(false);
+    navigate('/');
   };
 
   return (
@@ -392,15 +488,82 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
             {itemCount > 0 && <Badge>{itemCount}</Badge>}
           </IconButton>
 
-          {/* 사용자 메뉴 */}
-          <UserButton
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate('/profile')}
-            title="마이페이지"
-          >
-            <CartIcon>👤</CartIcon>
-          </UserButton>
+          {/* 인증 관련 버튼 */}
+          {auth?.isAuthenticated ? (
+            <UserMenuContainer>
+              <UserMenuButton
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                title="사용자 메뉴"
+              >
+                <CartIcon>👤</CartIcon>
+                <UserName>{auth.user?.firstName || '사용자'}</UserName>
+              </UserMenuButton>
+              
+              <AnimatePresence>
+                {showUserMenu && (
+                  <UserDropdown
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <UserDropdownItem
+                      onClick={() => {
+                        navigate('/profile');
+                        setShowUserMenu(false);
+                      }}
+                      whileHover={{ x: 4 }}
+                    >
+                      마이페이지
+                    </UserDropdownItem>
+                    <UserDropdownItem
+                      onClick={() => {
+                        navigate('/orders');
+                        setShowUserMenu(false);
+                      }}
+                      whileHover={{ x: 4 }}
+                    >
+                      주문내역
+                    </UserDropdownItem>
+                    <UserDropdownItem
+                      onClick={() => {
+                        navigate('/wishlist');
+                        setShowUserMenu(false);
+                      }}
+                      whileHover={{ x: 4 }}
+                    >
+                      위시리스트
+                    </UserDropdownItem>
+                    <UserDropdownItem
+                      onClick={handleLogout}
+                      whileHover={{ x: 4 }}
+                    >
+                      로그아웃
+                    </UserDropdownItem>
+                  </UserDropdown>
+                )}
+              </AnimatePresence>
+            </UserMenuContainer>
+          ) : (
+            <>
+              <LoginButton
+                to="/login"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                로그인
+              </LoginButton>
+              <RegisterButton
+                to="/register"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                회원가입
+              </RegisterButton>
+            </>
+          )}
 
           <MobileMenuButton onClick={toggleMenu}>
             <HamburgerIcon isOpen={isMenuOpen} />

@@ -1,5 +1,4 @@
 import React from 'react';
-import { Helmet } from 'react-helmet-async';
 
 interface SEOProps {
   title?: string;
@@ -43,7 +42,7 @@ export const SEOHead: React.FC<SEOProps> = ({
   noIndex = false,
   structuredData
 }) => {
-  const seo = {
+  const seo = React.useMemo(() => ({
     title: title ? `${title} - ${DEFAULT_SEO.siteName}` : DEFAULT_SEO.title,
     description: description || DEFAULT_SEO.description,
     keywords: [...DEFAULT_SEO.keywords, ...keywords],
@@ -55,115 +54,53 @@ export const SEOHead: React.FC<SEOProps> = ({
     publishedTime,
     modifiedTime,
     author
-  };
+  }), [title, description, keywords, image, url, type, siteName, locale, publishedTime, modifiedTime, author]);
 
-  // Generate structured data for different content types
-  const generateStructuredData = () => {
-    if (structuredData) {
-      return structuredData;
-    }
-
-    const baseData = {
-      '@context': 'https://schema.org',
-      '@type': type === 'article' ? 'Article' : 'WebPage',
-      name: seo.title,
-      description: seo.description,
-      url: seo.url,
-      image: seo.image,
-      publisher: {
-        '@type': 'Organization',
-        name: siteName,
-        url: DEFAULT_SEO.url,
-        logo: {
-          '@type': 'ImageObject',
-          url: `${DEFAULT_SEO.url}/logo.png`
-        }
+  React.useEffect(() => {
+    document.title = seo.title;
+    
+    // Update meta tags
+    const updateMeta = (name: string, content: string) => {
+      let meta = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement;
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.name = name;
+        document.head.appendChild(meta);
       }
+      meta.content = content;
     };
 
-    if (type === 'article' && author) {
-      return {
-        ...baseData,
-        '@type': 'Article',
-        author: {
-          '@type': 'Person',
-          name: author
-        },
-        datePublished: publishedTime,
-        dateModified: modifiedTime || publishedTime,
-        headline: title,
-        articleBody: description
-      };
+    const updateProperty = (property: string, content: string) => {
+      let meta = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement;
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.setAttribute('property', property);
+        document.head.appendChild(meta);
+      }
+      meta.content = content;
+    };
+
+    updateMeta('description', seo.description);
+    updateMeta('keywords', seo.keywords.join(', '));
+    updateMeta('twitter:card', 'summary_large_image');
+    updateMeta('twitter:title', seo.title);
+    updateMeta('twitter:description', seo.description);
+    updateMeta('twitter:image', seo.image);
+    
+    updateProperty('og:title', seo.title);
+    updateProperty('og:description', seo.description);
+    updateProperty('og:image', seo.image);
+    updateProperty('og:url', seo.url);
+    updateProperty('og:type', seo.type);
+    updateProperty('og:site_name', seo.siteName);
+    updateProperty('og:locale', seo.locale);
+
+    if (noIndex) {
+      updateMeta('robots', 'noindex, nofollow');
     }
+  }, [seo, noIndex]);
 
-    if (type === 'product') {
-      return {
-        ...baseData,
-        '@type': 'Product',
-        brand: {
-          '@type': 'Brand',
-          name: siteName
-        }
-      };
-    }
-
-    return baseData;
-  };
-
-  return (
-    <Helmet>
-      {/* Basic meta tags */}
-      <title>{seo.title}</title>
-      <meta name="description" content={seo.description} />
-      <meta name="keywords" content={seo.keywords.join(', ')} />
-      
-      {/* Robots */}
-      {noIndex && <meta name="robots" content="noindex, nofollow" />}
-      
-      {/* Open Graph */}
-      <meta property="og:type" content={seo.type} />
-      <meta property="og:title" content={seo.title} />
-      <meta property="og:description" content={seo.description} />
-      <meta property="og:image" content={seo.image} />
-      <meta property="og:url" content={seo.url} />
-      <meta property="og:site_name" content={seo.siteName} />
-      <meta property="og:locale" content={seo.locale} />
-      
-      {/* Article specific */}
-      {type === 'article' && publishedTime && (
-        <meta property="article:published_time" content={publishedTime} />
-      )}
-      {type === 'article' && modifiedTime && (
-        <meta property="article:modified_time" content={modifiedTime} />
-      )}
-      {type === 'article' && author && (
-        <meta property="article:author" content={author} />
-      )}
-      
-      {/* Twitter Card */}
-      <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content={seo.title} />
-      <meta name="twitter:description" content={seo.description} />
-      <meta name="twitter:image" content={seo.image} />
-      
-      {/* Additional meta tags for Korean market */}
-      <meta name="naver-site-verification" content="naver-verification-code" />
-      <meta name="google-site-verification" content="google-verification-code" />
-      
-      {/* Canonical URL */}
-      <link rel="canonical" href={seo.url} />
-      
-      {/* Structured Data */}
-      <script type="application/ld+json">
-        {JSON.stringify(generateStructuredData())}
-      </script>
-      
-      {/* Preconnect to external domains for performance */}
-      <link rel="preconnect" href="https://images.unsplash.com" />
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-    </Helmet>
-  );
+  return null;
 };
 
 // Hook for dynamic SEO updates

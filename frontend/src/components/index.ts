@@ -20,3 +20,6 @@ export * from './Footer';
 export * from './AuthForms';
 export * from './ProtectedRoute';
 export * from './UserProfile';
+export * from './Search';
+export * from './Recommendation';
+export * from './Analytics';

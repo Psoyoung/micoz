@@ -61,10 +61,10 @@ export class SearchService {
     // Add text search if query provided
     if (query.trim()) {
       where.OR = [
-        { name: { contains: query, mode: 'insensitive' } },
-        { description: { contains: query, mode: 'insensitive' } },
-        { category: { contains: query, mode: 'insensitive' } },
-        { brand: { contains: query, mode: 'insensitive' } }
+        { name: { contains: query } },
+        { description: { contains: query } },
+        { category: { contains: query } },
+        { brand: { contains: query } }
       ];
     }
 
@@ -267,8 +267,8 @@ export class SearchService {
       where: {
         status: 'ACTIVE',
         OR: [
-          { name: { contains: query.substring(0, Math.floor(query.length / 2)), mode: 'insensitive' } },
-          { category: { contains: query.substring(0, Math.floor(query.length / 2)), mode: 'insensitive' } }
+          { name: { contains: query.substring(0, Math.floor(query.length / 2)) } },
+          { category: { contains: query.substring(0, Math.floor(query.length / 2)) } }
         ]
       },
       select: { name: true, category: true },

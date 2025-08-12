@@ -9,10 +9,24 @@ export interface Product {
   description: string;
   price: string;
   originalPrice?: string;
+  compareAtPrice?: string;
   image: string;
+  images?: string[];
   category: string;
+  subCategory?: string;
+  brand?: string;
+  slug?: string;
   isNew?: boolean;
   isBestseller?: boolean;
+  featured?: boolean;
+  inventory?: number;
+  rating?: {
+    average: number;
+    count: number;
+  };
+  wishlistCount?: number;
+  createdAt?: string;
+  publishedAt?: string;
 }
 
 export interface ProductSectionProps {

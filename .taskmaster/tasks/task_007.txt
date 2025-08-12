@@ -1,35 +1,35 @@
 # Task ID: 7
-# Title: Implement User Authentication and Account Management
+# Title: 사용자 인증 및 계정 관리 구현
 # Status: done
 # Dependencies: 1
 # Priority: high
-# Description: Develop user authentication system with JWT and refresh tokens, along with comprehensive account management functionality.
+# Description: JWT 및 리프레시 토큰을 사용한 사용자 인증 시스템과 포괄적인 계정 관리 기능을 개발합니다.
 # Details:
-1. Implement authentication system:
-   - Registration with email verification
-   - Login with JWT + Refresh Token
-   - Social login options
-   - Password reset functionality
-2. Create user profile management:
-   - Personal information management
-   - Shipping address management
-   - Payment method storage (securely)
-   - Order history
-3. Implement personalization features:
-   - Skin type and concerns profile
-   - Product preferences
-   - Wishlist management
-4. Develop notification system:
-   - Order status updates
-   - Restock notifications
-   - Personalized product recommendations
-5. Implement privacy and data management in compliance with regulations
+1. 인증 시스템 구현:
+   - 이메일 인증을 포함한 회원가입
+   - JWT + 리프레시 토큰을 사용한 로그인
+   - 소셜 로그인 옵션
+   - 비밀번호 재설정 기능
+2. 사용자 프로필 관리 생성:
+   - 개인정보 관리
+   - 배송지 주소 관리
+   - 결제 수단 저장 (보안)
+   - 주문 내역
+3. 개인화 기능 구현:
+   - 피부 타입 및 고민 프로필
+   - 제품 선호도
+   - 위시리스트 관리
+4. 알림 시스템 개발:
+   - 주문 상태 업데이트
+   - 재입고 알림
+   - 개인화된 제품 추천
+5. 규정 준수를 위한 개인정보 및 데이터 관리 구현
 
 # Test Strategy:
-1. Security testing for authentication system
-2. Test token refresh mechanism
-3. Verify email verification process
-4. Test user profile CRUD operations
-5. Verify password reset functionality
-6. Test notification delivery
-7. Perform data privacy compliance audit
+1. 인증 시스템 보안 테스트
+2. 토큰 리프레시 메커니즘 테스트
+3. 이메일 인증 과정 확인
+4. 사용자 프로필 CRUD 작업 테스트
+5. 비밀번호 재설정 기능 확인
+6. 알림 전송 테스트
+7. 데이터 개인정보 준수 감사 수행

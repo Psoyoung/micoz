@@ -356,7 +356,7 @@ export const BeautyTipForm: React.FC<BeautyTipFormProps> = ({
           <Select
             options={categories}
             value={formData.category}
-            onChange={(value) => setFormData(prev => ({ ...prev, category: value as BeautyTipCategory }))}
+            onChange={(value: string) => setFormData(prev => ({ ...prev, category: value as BeautyTipCategory }))}
           />
         </FormSection>
 
@@ -367,7 +367,7 @@ export const BeautyTipForm: React.FC<BeautyTipFormProps> = ({
           <Select
             options={difficulties}
             value={formData.difficulty}
-            onChange={(value) => setFormData(prev => ({ ...prev, difficulty: value as TipDifficulty }))}
+            onChange={(value: string) => setFormData(prev => ({ ...prev, difficulty: value as TipDifficulty }))}
           />
         </FormSection>
       </FormRow>

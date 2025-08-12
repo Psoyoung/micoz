@@ -578,7 +578,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = () => {
       maxQuantity: selectedVariantData?.inventory ?? product.inventory,
       variant: selectedVariantData ? {
         name: selectedVariantData.name,
-        sku: selectedVariantData.sku,
+        sku: selectedVariantData.sku || selectedVariantData.id,
       } : undefined,
     }));
     

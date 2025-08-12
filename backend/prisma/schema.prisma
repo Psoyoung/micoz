@@ -8,388 +8,403 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(cuid())
-  email       String   @unique
-  firstName   String
-  lastName    String
-  phone       String?
-  password    String
-  avatar      String?
-  verified    Boolean  @default(false)
-  birthDate   DateTime?
-  gender      Gender?
-  
-  // Email verification
-  emailVerificationToken String?
+  id                       String             @id @default(cuid())
+  email                    String             @unique
+  firstName                String
+  lastName                 String
+  phone                    String?
+  password                 String
+  avatar                   String?
+  verified                 Boolean            @default(false)
+  birthDate                DateTime?
+  gender                   Gender?
+  emailVerificationToken   String?
   emailVerificationExpires DateTime?
-  
-  // Password reset
-  passwordResetToken String?
-  passwordResetExpires DateTime?
-  
-  // Beauty profile
-  skinType    SkinType?
-  skinConcerns String? // JSON string of concerns array
-  
-  // Preferences
-  newsletterSubscribed Boolean @default(false)
-  marketingConsent Boolean @default(false)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  lastLoginAt DateTime?
-
-  addresses     Address[]
-  orders        Order[]
-  reviews       Review[]
-  reviewVotes   ReviewVote[]
-  wishlistItems WishlistItem[]
-  paymentMethods PaymentMethod[]
-  questions     Question[]
-  answers       Answer[]
-  questionVotes QuestionVote[]
-  answerVotes   AnswerVote[]
-  beautyTips    BeautyTip[]
-  tipVotes      BeautyTipVote[]
-  tipComments   BeautyTipComment[]
-  followedTips  BeautyTipFollow[]
-  reviewComments ReviewComment[]
-  notifications Notification[]
-  sentNotifications Notification[] @relation("NotificationSender")
-  behaviors     UserBehavior[]
-  recommendations UserRecommendation[]
+  passwordResetToken       String?
+  passwordResetExpires     DateTime?
+  skinType                 SkinType?
+  skinConcerns             String?
+  newsletterSubscribed     Boolean            @default(false)
+  marketingConsent         Boolean            @default(false)
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @updatedAt
+  lastLoginAt              DateTime?
+  addresses                Address[]
+  answerVotes              AnswerVote[]
+  answers                  Answer[]
+  tipComments              BeautyTipComment[]
+  followedTips             BeautyTipFollow[]
+  tipVotes                 BeautyTipVote[]
+  beautyTips               BeautyTip[]
+  sentNotifications        Notification[]     @relation("NotificationSender")
+  notifications            Notification[]
+  orders                   Order[]
+  paymentMethods           PaymentMethod[]
+  questionVotes            QuestionVote[]
+  questions                Question[]
+  reviewComments           ReviewComment[]
+  reviewVotes              ReviewVote[]
+  reviews                  Review[]
+  wishlistItems            WishlistItem[]
 
   @@map("users")
 }
 
 model Address {
-  id          String   @id @default(cuid())
-  userId      String
-  firstName   String
-  lastName    String
-  company     String?
-  address1    String
-  address2    String?
-  city        String
-  state       String
-  zipCode     String
-  country     String   @default("KR")
-  phone       String?
-  isDefault   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  orders Order[]
+  id        String   @id @default(cuid())
+  userId    String
+  firstName String
+  lastName  String
+  company   String?
+  address1  String
+  address2  String?
+  city      String
+  state     String
+  zipCode   String
+  country   String   @default("KR")
+  phone     String?
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders    Order[]
 
   @@map("addresses")
 }
 
 model Product {
-  id          String   @id @default(cuid())
-  name        String
-  description String
+  id               String           @id @default(cuid())
+  name             String
+  description      String
   shortDescription String?
-  price       Int      // in cents
-  compareAtPrice Int?   // original price for discounts
-  sku         String   @unique
-  barcode     String?
-  
-  // Product details
-  category    String
-  subCategory String?
-  brand       String   @default("MICOZ")
-  ingredients String? // JSON string of ingredients array
-  usage       String?
-  
-  // Inventory
-  inventory   Int      @default(0)
-  trackInventory Boolean @default(true)
-  
-  // SEO & Display
-  slug        String   @unique
-  images      String? // JSON string of image URLs array
-  featured    Boolean  @default(false)
-  isNew       Boolean  @default(false)
-  isBestseller Boolean @default(false)
-  
-  // Status
-  status      ProductStatus @default(ACTIVE)
-  publishedAt DateTime?
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  orderItems    OrderItem[]
-  reviews       Review[]
-  wishlistItems WishlistItem[]
-  variants      ProductVariant[]
-  questions     Question[]
-  behaviors     UserBehavior[]
-  similarities  ProductSimilarity[] @relation("ProductSimilarities")
-  similarTo     ProductSimilarity[] @relation("SimilarProducts")
-  recommendations UserRecommendation[]
+  price            Int
+  compareAtPrice   Int?
+  sku              String           @unique
+  barcode          String?
+  category         String
+  subCategory      String?
+  brand            String           @default("MICOZ")
+  ingredients      String?
+  usage            String?
+  inventory        Int              @default(0)
+  trackInventory   Boolean          @default(true)
+  slug             String           @unique
+  images           String?
+  featured         Boolean          @default(false)
+  isNew            Boolean          @default(false)
+  isBestseller     Boolean          @default(false)
+  status           ProductStatus    @default(ACTIVE)
+  publishedAt      DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  orderItems       OrderItem[]
+  variants         ProductVariant[]
+  questions        Question[]
+  reviews          Review[]
+  wishlistItems    WishlistItem[]
 
   @@map("products")
 }
 
 model ProductVariant {
-  id        String @id @default(cuid())
-  productId String
-  name      String // e.g., "50ml", "100ml", "Light", "Medium"
-  sku       String @unique
-  price     Int    // in cents
-  inventory Int    @default(0)
-  position  Int    @default(0)
-  
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id         String      @id @default(cuid())
+  productId  String
+  name       String
+  sku        String      @unique
+  price      Int
+  inventory  Int         @default(0)
+  position   Int         @default(0)
   orderItems OrderItem[]
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@map("product_variants")
 }
 
 model Order {
-  id          String   @id @default(cuid())
-  userId      String
-  orderNumber String   @unique
-  
-  // Pricing
-  subtotal    Int      // in cents
-  taxAmount   Int      @default(0)
-  shippingCost Int     @default(0)
-  discountAmount Int   @default(0)
-  totalAmount Int
-  
-  // Status
-  status      OrderStatus @default(PENDING)
-  paymentStatus PaymentStatus @default(PENDING)
+  id                String            @id @default(cuid())
+  userId            String
+  orderNumber       String            @unique
+  subtotal          Int
+  taxAmount         Int               @default(0)
+  shippingCost      Int               @default(0)
+  discountAmount    Int               @default(0)
+  totalAmount       Int
+  status            OrderStatus       @default(PENDING)
+  paymentStatus     PaymentStatus     @default(PENDING)
   fulfillmentStatus FulfillmentStatus @default(UNFULFILLED)
-  
-  // Shipping
-  addressId   String
-  shippingMethod String?
-  trackingNumber String?
-  
-  // Timestamps
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  shippedAt   DateTime?
-  deliveredAt DateTime?
-
-  user        User        @relation(fields: [userId], references: [id])
-  address     Address     @relation(fields: [addressId], references: [id])
-  orderItems  OrderItem[]
-  payments    Payment[]
+  addressId         String
+  shippingMethod    String?
+  trackingNumber    String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  shippedAt         DateTime?
+  deliveredAt       DateTime?
+  orderItems        OrderItem[]
+  address           Address           @relation(fields: [addressId], references: [id])
+  user              User              @relation(fields: [userId], references: [id])
+  payments          Payment[]
 
   @@map("orders")
 }
 
 model OrderItem {
-  id              String @id @default(cuid())
-  orderId         String
-  productId       String
-  variantId       String?
-  quantity        Int
-  price           Int    // price at time of purchase
-  
-  order    Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product  Product         @relation(fields: [productId], references: [id])
-  variant  ProductVariant? @relation(fields: [variantId], references: [id])
+  id        String          @id @default(cuid())
+  orderId   String
+  productId String
+  variantId String?
+  quantity  Int
+  price     Int
+  variant   ProductVariant? @relation(fields: [variantId], references: [id])
+  product   Product         @relation(fields: [productId], references: [id])
+  order     Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@map("order_items")
 }
 
 model Payment {
-  id            String @id @default(cuid())
+  id            String        @id @default(cuid())
   orderId       String
-  amount        Int    // in cents
-  currency      String @default("KRW")
-  paymentMethod String // "card", "bank_transfer", "kakao_pay", etc.
+  amount        Int
+  currency      String        @default("KRW")
+  paymentMethod String
   status        PaymentStatus @default(PENDING)
   transactionId String?
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  order         Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@map("payments")
 }
 
 model PaymentMethod {
-  id       String @id @default(cuid())
-  userId   String
-  type     String // "card", "bank_account"
-  provider String // "visa", "mastercard", "kb", etc.
-  last4    String
-  isDefault Boolean @default(false)
-  
-  // Encrypted payment details would be stored securely
+  id            String   @id @default(cuid())
+  userId        String
+  type          String
+  provider      String
+  last4         String
+  isDefault     Boolean  @default(false)
   encryptedData String
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("payment_methods")
 }
 
 model Review {
-  id        String @id @default(cuid())
-  userId    String
-  productId String
-  rating    Int    // 1-5
-  title     String?
-  comment   String
-  images    String? // JSON string of image URLs array
-  verified  Boolean @default(false) // verified purchase
-  helpful   Int @default(0)
-  
-  // Extended review data
-  skinType  SkinType?
-  skinConcerns String? // JSON string of concerns array
-  effectsExperienced String? // JSON string of effects array
-  wouldRecommend Boolean @default(true)
-  repurchaseIntent Boolean @default(false)
-  usageDuration String? // e.g., "2주", "1개월"
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  reviewVotes ReviewVote[]
-  comments ReviewComment[]
+  id                 String          @id @default(cuid())
+  userId             String
+  productId          String
+  rating             Int
+  title              String?
+  comment            String
+  images             String?
+  verified           Boolean         @default(false)
+  helpful            Int             @default(0)
+  skinType           SkinType?
+  skinConcerns       String?
+  effectsExperienced String?
+  wouldRecommend     Boolean         @default(true)
+  repurchaseIntent   Boolean         @default(false)
+  usageDuration      String?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  comments           ReviewComment[]
+  reviewVotes        ReviewVote[]
+  product            Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, productId]) // One review per user per product
+  @@unique([userId, productId])
   @@map("reviews")
 }
 
 model ReviewVote {
-  id       String @id @default(cuid())
-  reviewId String
-  userId   String
-  isHelpful Boolean // true for helpful, false for not helpful
-  
+  id        String   @id @default(cuid())
+  reviewId  String
+  userId    String
+  isHelpful Boolean
   createdAt DateTime @default(now())
-  
-  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
 
-  @@unique([reviewId, userId]) // One vote per user per review
+  @@unique([reviewId, userId])
   @@map("review_votes")
 }
 
 model ReviewComment {
-  id        String @id @default(cuid())
+  id        String          @id @default(cuid())
   reviewId  String
   userId    String
   content   String
-  parentId  String? // For nested comments/replies
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  review   Review             @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-  user     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  parent   ReviewComment?     @relation("ReviewCommentReplies", fields: [parentId], references: [id])
-  replies  ReviewComment[]    @relation("ReviewCommentReplies")
-  
+  parentId  String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  parent    ReviewComment?  @relation("ReviewCommentReplies", fields: [parentId], references: [id])
+  replies   ReviewComment[] @relation("ReviewCommentReplies")
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  review    Review          @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
   @@map("review_comments")
 }
 
 model WishlistItem {
-  id        String @id @default(cuid())
+  id        String   @id @default(cuid())
   userId    String
   productId String
-  
   createdAt DateTime @default(now())
-  
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId])
   @@map("wishlist_items")
 }
 
 model Question {
-  id        String @id @default(cuid())
-  userId    String
-  productId String
-  title     String
-  content   String
-  category  QuestionCategory @default(GENERAL)
-  status    QuestionStatus @default(PENDING)
-  
-  // Vote counts for sorting
-  upvotes   Int @default(0)
-  downvotes Int @default(0)
-  
-  // Admin response fields
-  isAnswered Boolean @default(false)
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  answers  Answer[]
-  votes    QuestionVote[]
+  id         String           @id @default(cuid())
+  userId     String
+  productId  String
+  title      String
+  content    String
+  category   QuestionCategory @default(GENERAL)
+  status     QuestionStatus   @default(PENDING)
+  upvotes    Int              @default(0)
+  downvotes  Int              @default(0)
+  isAnswered Boolean          @default(false)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  answers    Answer[]
+  votes      QuestionVote[]
+  product    Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("questions")
 }
 
 model Answer {
-  id         String @id @default(cuid())
+  id         String       @id @default(cuid())
   questionId String
   userId     String
   content    String
-  isOfficial Boolean @default(false) // Staff answer
-  isAccepted Boolean @default(false) // Best answer chosen by question author
-  
-  // Vote counts
-  upvotes    Int @default(0)
-  downvotes  Int @default(0)
-  
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  
-  question Question     @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  votes    AnswerVote[]
+  isOfficial Boolean      @default(false)
+  isAccepted Boolean      @default(false)
+  upvotes    Int          @default(0)
+  downvotes  Int          @default(0)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  votes      AnswerVote[]
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question   Question     @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@map("answers")
 }
 
 model QuestionVote {
-  id         String @id @default(cuid())
+  id         String   @id @default(cuid())
   questionId String
   userId     String
-  isUpvote   Boolean // true for upvote, false for downvote
-  
+  isUpvote   Boolean
   createdAt  DateTime @default(now())
-  
-  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
-  @@unique([questionId, userId]) // One vote per user per question
+  @@unique([questionId, userId])
   @@map("question_votes")
 }
 
 model AnswerVote {
-  id       String @id @default(cuid())
-  answerId String
-  userId   String
-  isUpvote Boolean // true for upvote, false for downvote
-  
+  id        String   @id @default(cuid())
+  answerId  String
+  userId    String
+  isUpvote  Boolean
   createdAt DateTime @default(now())
-  
-  answer Answer @relation(fields: [answerId], references: [id], onDelete: Cascade)
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answer    Answer   @relation(fields: [answerId], references: [id], onDelete: Cascade)
 
-  @@unique([answerId, userId]) // One vote per user per answer
+  @@unique([answerId, userId])
   @@map("answer_votes")
+}
+
+model BeautyTip {
+  id         String             @id @default(cuid())
+  userId     String
+  title      String
+  content    String
+  category   BeautyTipCategory
+  tags       String?
+  images     String?
+  skinTypes  String?
+  difficulty TipDifficulty      @default(BEGINNER)
+  views      Int                @default(0)
+  upvotes    Int                @default(0)
+  downvotes  Int                @default(0)
+  status     TipStatus          @default(PUBLISHED)
+  featured   Boolean            @default(false)
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  comments   BeautyTipComment[]
+  followers  BeautyTipFollow[]
+  votes      BeautyTipVote[]
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("beauty_tips")
+}
+
+model BeautyTipVote {
+  id        String    @id @default(cuid())
+  tipId     String
+  userId    String
+  isUpvote  Boolean
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tip       BeautyTip @relation(fields: [tipId], references: [id], onDelete: Cascade)
+
+  @@unique([tipId, userId])
+  @@map("beauty_tip_votes")
+}
+
+model BeautyTipComment {
+  id        String             @id @default(cuid())
+  tipId     String
+  userId    String
+  content   String
+  parentId  String?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  parent    BeautyTipComment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   BeautyTipComment[] @relation("CommentReplies")
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tip       BeautyTip          @relation(fields: [tipId], references: [id], onDelete: Cascade)
+
+  @@map("beauty_tip_comments")
+}
+
+model BeautyTipFollow {
+  id        String    @id @default(cuid())
+  tipId     String
+  userId    String
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tip       BeautyTip @relation(fields: [tipId], references: [id], onDelete: Cascade)
+
+  @@unique([tipId, userId])
+  @@map("beauty_tip_follows")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  senderId  String?
+  type      NotificationType
+  title     String
+  message   String
+  data      String?
+  read      Boolean          @default(false)
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+  sender    User?            @relation("NotificationSender", fields: [senderId], references: [id])
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
 }
 
 enum Gender {
@@ -455,84 +470,6 @@ enum QuestionStatus {
   CLOSED
 }
 
-model BeautyTip {
-  id          String @id @default(cuid())
-  userId      String
-  title       String
-  content     String
-  category    BeautyTipCategory
-  tags        String? // JSON string of tags array
-  images      String? // JSON string of image URLs array
-  skinTypes   String? // JSON string of applicable skin types
-  difficulty  TipDifficulty @default(BEGINNER)
-  
-  // Engagement metrics
-  views       Int @default(0)
-  upvotes     Int @default(0)
-  downvotes   Int @default(0)
-  
-  // Status
-  status      TipStatus @default(PUBLISHED)
-  featured    Boolean @default(false)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  votes       BeautyTipVote[]
-  comments    BeautyTipComment[]
-  followers   BeautyTipFollow[]
-  
-  @@map("beauty_tips")
-}
-
-model BeautyTipVote {
-  id        String @id @default(cuid())
-  tipId     String
-  userId    String
-  isUpvote  Boolean // true for upvote, false for downvote
-  
-  createdAt DateTime @default(now())
-  
-  tip  BeautyTip @relation(fields: [tipId], references: [id], onDelete: Cascade)
-  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([tipId, userId]) // One vote per user per tip
-  @@map("beauty_tip_votes")
-}
-
-model BeautyTipComment {
-  id        String @id @default(cuid())
-  tipId     String
-  userId    String
-  content   String
-  parentId  String? // For nested comments/replies
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  tip      BeautyTip             @relation(fields: [tipId], references: [id], onDelete: Cascade)
-  user     User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  parent   BeautyTipComment?     @relation("CommentReplies", fields: [parentId], references: [id])
-  replies  BeautyTipComment[]    @relation("CommentReplies")
-  
-  @@map("beauty_tip_comments")
-}
-
-model BeautyTipFollow {
-  id        String @id @default(cuid())
-  tipId     String
-  userId    String
-  
-  createdAt DateTime @default(now())
-  
-  tip  BeautyTip @relation(fields: [tipId], references: [id], onDelete: Cascade)
-  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([tipId, userId]) // One follow per user per tip
-  @@map("beauty_tip_follows")
-}
-
 enum BeautyTipCategory {
   SKINCARE
   MAKEUP
@@ -558,119 +495,38 @@ enum TipStatus {
   FEATURED
 }
 
-model Notification {
-  id        String @id @default(cuid())
-  userId    String // Recipient
-  senderId  String? // Who triggered the notification (optional for system notifications)
-  type      NotificationType
-  title     String
-  message   String
-  data      String? // JSON string for additional data (e.g., related entity IDs)
-  read      Boolean @default(false)
-  readAt    DateTime?
-  
-  createdAt DateTime @default(now())
-  
-  user   User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  sender User? @relation("NotificationSender", fields: [senderId], references: [id], onDelete: SetNull)
-  
-  @@map("notifications")
-}
-
 enum NotificationType {
-  // Review related
-  REVIEW_COMMENT        // Someone commented on your review
-  REVIEW_VOTE          // Someone voted on your review
-  
-  // Q&A related
-  QUESTION_ANSWERED    // Your question was answered
-  ANSWER_ACCEPTED      // Your answer was accepted
-  QUESTION_VOTE        // Someone voted on your question
-  ANSWER_VOTE          // Someone voted on your answer
-  
-  // Beauty Tips related
-  TIP_COMMENT          // Someone commented on your beauty tip
-  TIP_VOTE             // Someone voted on your beauty tip
-  TIP_FEATURED         // Your beauty tip was featured
-  
-  // General community
-  FOLLOW_TIP           // Someone followed your beauty tip
-  MENTION              // Someone mentioned you
-  SYSTEM               // System notifications
-}
-
-model UserBehavior {
-  id        String @id @default(cuid())
-  userId    String
-  productId String
-  action    BehaviorAction
-  sessionId String?
-  metadata  String? // JSON string for additional data
-  
-  createdAt DateTime @default(now())
-  
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  
-  @@index([userId, createdAt])
-  @@index([productId, action])
-  @@map("user_behaviors")
-}
-
-model ProductSimilarity {
-  id              String @id @default(cuid())
-  productId       String
-  similarProductId String
-  similarityScore Float
-  similarityType  SimilarityType
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  product        Product @relation("ProductSimilarities", fields: [productId], references: [id], onDelete: Cascade)
-  similarProduct Product @relation("SimilarProducts", fields: [similarProductId], references: [id], onDelete: Cascade)
-  
-  @@unique([productId, similarProductId, similarityType])
-  @@index([productId, similarityScore])
-  @@map("product_similarities")
-}
-
-model UserRecommendation {
-  id        String @id @default(cuid())
-  userId    String
-  productId String
-  score     Float
-  algorithm RecommendationAlgorithm
-  metadata  String? // JSON string for recommendation context
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  
-  @@unique([userId, productId, algorithm])
-  @@index([userId, score])
-  @@map("user_recommendations")
+  REVIEW_COMMENT
+  REVIEW_VOTE
+  QUESTION_ANSWERED
+  ANSWER_ACCEPTED
+  QUESTION_VOTE
+  ANSWER_VOTE
+  TIP_COMMENT
+  TIP_VOTE
+  TIP_FEATURED
+  FOLLOW_TIP
+  MENTION
+  SYSTEM
 }
 
 enum BehaviorAction {
-  VIEW              // Product page view
-  ADD_TO_CART      // Add to cart
-  REMOVE_FROM_CART // Remove from cart
-  PURCHASE         // Complete purchase
-  ADD_TO_WISHLIST  // Add to wishlist
-  REMOVE_FROM_WISHLIST // Remove from wishlist
-  SEARCH           // Search for product
-  FILTER           // Use filters that include product
-  REVIEW           // Write review
-  SHARE            // Share product
+  VIEW
+  ADD_TO_CART
+  REMOVE_FROM_CART
+  PURCHASE
+  ADD_TO_WISHLIST
+  REMOVE_FROM_WISHLIST
+  SEARCH
+  FILTER
+  REVIEW
+  SHARE
 }
 
 enum SimilarityType {
-  CONTENT_BASED    // Based on product attributes
-  COLLABORATIVE    // Based on user behavior
-  HYBRID          // Combination of both
+  CONTENT_BASED
+  COLLABORATIVE
+  HYBRID
 }
 
 enum RecommendationAlgorithm {

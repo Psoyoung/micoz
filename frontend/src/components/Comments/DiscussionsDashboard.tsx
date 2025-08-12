@@ -374,7 +374,7 @@ export const DiscussionsDashboard: React.FC<DiscussionsDashboardProps> = ({
             <Select
               options={typeOptions}
               value={type}
-              onChange={(value) => setType(value as any)}
+              onChange={(value: string) => setType(value as any)}
             />
           </div>
           <div>
@@ -382,7 +382,7 @@ export const DiscussionsDashboard: React.FC<DiscussionsDashboardProps> = ({
             <Select
               options={timeframeOptions}
               value={timeframe}
-              onChange={(value) => setTimeframe(value as any)}
+              onChange={(value: string) => setTimeframe(value as any)}
             />
           </div>
           <div>
@@ -390,7 +390,7 @@ export const DiscussionsDashboard: React.FC<DiscussionsDashboardProps> = ({
             <Select
               options={limitOptions}
               value={limit.toString()}
-              onChange={(value) => setLimit(parseInt(value))}
+              onChange={(value: string) => setLimit(parseInt(value))}
             />
           </div>
         </FilterGrid>
