@@ -1,0 +1,49 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Gradle build artifacts
+.gradle
+build
+out
+
+# IDE
+.idea
+.vscode
+*.iml
+*.iws
+*.ipr
+.classpath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin
+
+# Secrets / Env
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs
+
+# Test/Coverage
+coverage
+.jacoco
+*.exec
+
+# Documentation / project memory
+.claude
+.omc
+*.md
+!README.md
+
+# Node (if frontend is added later)
+node_modules
