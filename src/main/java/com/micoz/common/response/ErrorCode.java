@@ -24,6 +24,7 @@ public enum ErrorCode {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."),
     USER_DUPLICATED_ID(HttpStatus.CONFLICT, "이미 사용 중인 아이디입니다."),
     USER_AGREEMENT_REQUIRED(HttpStatus.BAD_REQUEST, "필수 약관에 동의해야 합니다."),
+    USER_REFERRER_NOT_FOUND(HttpStatus.BAD_REQUEST, "추천인을 찾을 수 없습니다."),
 
     // PRODUCT (M2)
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "상품을 찾을 수 없습니다."),
