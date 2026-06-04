@@ -47,3 +47,6 @@ replay_pid*
 
 .claude/
 .omc/
+
+# --- Local test fixtures (E2E payloads with fake credentials) ---
+.test/
