@@ -11,6 +11,8 @@ public interface ProductImageRepository extends JpaRepository<ProductImage, Long
 
     List<ProductImage> findAllByProductSeqAndImageTypeAndUseYnOrderBySortOrderAsc(Long productSeq, String imageType, String useYn);
 
+    List<ProductImage> findAllByProductSeqInAndImageTypeAndUseYn(java.util.Collection<Long> productSeqs, String imageType, String useYn);
+
     default List<ProductImage> findActiveByProductSeq(Long productSeq) {
         return findAllByProductSeqAndUseYnOrderBySortOrderAsc(productSeq, "Y");
     }

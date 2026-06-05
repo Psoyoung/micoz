@@ -11,4 +11,6 @@ public interface MapProductLabelRepository
     List<MapProductLabel> findAllByProductSeq(Long productSeq);
 
     List<MapProductLabel> findAllByLabelSeq(Long labelSeq);
+
+    List<MapProductLabel> findAllByProductSeqIn(java.util.Collection<Long> productSeqs);
 }
