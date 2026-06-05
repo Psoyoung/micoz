@@ -54,6 +54,12 @@ public class SecurityConfig {
                                 "/actuator/health",
                                 "/actuator/info"
                         ).permitAll()
+                        // 카탈로그 공개 조회 (M2)
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/categories/**",
+                                "/api/v1/products/**",
+                                "/api/v1/banners/**"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(eh -> eh
