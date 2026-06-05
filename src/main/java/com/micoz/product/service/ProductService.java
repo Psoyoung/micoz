@@ -185,6 +185,30 @@ public class ProductService {
                 .build();
     }
 
+    /**
+     * Product 리스트를 ProductListItem 리스트로 변환 (mainImage + labels 일괄 조회).
+     * M3 찜 목록 등 외부 도메인에서 재사용.
+     */
+    @Transactional(readOnly = true)
+    public List<ProductListItem> toListItems(List<Product> products) {
+        if (products == null || products.isEmpty()) return List.of();
+        List<Long> productSeqs = products.stream().map(Product::getProductSeq).toList();
+        Map<Long, String> mainImageUrlByProduct = loadMainImageUrls(productSeqs);
+        Map<Long, List<String>> labelsByProduct = loadLabels(productSeqs);
+        return products.stream()
+                .map(p -> ProductListItem.builder()
+                        .productSeq(p.getProductSeq())
+                        .productCode(p.getProductCode())
+                        .productName(p.getProductName())
+                        .productStatus(p.getProductStatus())
+                        .basePrice(p.getBasePrice())
+                        .shortDesc(p.getShortDesc())
+                        .mainImageUrl(mainImageUrlByProduct.get(p.getProductSeq()))
+                        .labels(labelsByProduct.getOrDefault(p.getProductSeq(), List.of()))
+                        .build())
+                .toList();
+    }
+
     private Map<Long, String> loadMainImageUrls(Collection<Long> productSeqs) {
         List<ProductImage> images = productImageRepository
                 .findAllByProductSeqInAndImageTypeAndUseYn(productSeqs, "MAIN", "Y");

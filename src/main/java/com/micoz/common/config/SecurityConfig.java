@@ -52,7 +52,9 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/actuator/health",
-                                "/actuator/info"
+                                "/actuator/info",
+                                "/actuator/metrics/**",
+                                "/actuator/prometheus"
                         ).permitAll()
                         // 카탈로그 공개 조회 (M2)
                         .requestMatchers(HttpMethod.GET,
