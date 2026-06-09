@@ -38,6 +38,9 @@ public enum ErrorCode {
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "주문을 찾을 수 없습니다."),
     ORDER_AMOUNT_MISMATCH(HttpStatus.BAD_REQUEST, "주문 금액이 일치하지 않습니다."),
     ORDER_INVALID_STATUS(HttpStatus.CONFLICT, "현재 주문 상태에서 처리할 수 없습니다."),
+    ORDER_EMPTY_ITEMS(HttpStatus.BAD_REQUEST, "주문 항목이 없습니다."),
+    ADDRESS_NOT_FOUND(HttpStatus.NOT_FOUND, "배송지를 찾을 수 없습니다."),
+    ADDRESS_REQUIRED(HttpStatus.BAD_REQUEST, "배송지 정보가 필요합니다."),
 
     // PAY (M4)
     PAY_APPROVAL_FAILED(HttpStatus.BAD_GATEWAY, "결제 승인에 실패했습니다."),
