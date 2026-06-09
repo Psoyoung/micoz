@@ -3,6 +3,7 @@ package com.micoz.cart.repository;
 import com.micoz.cart.entity.Cart;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,4 +18,6 @@ public interface CartRepository extends JpaRepository<Cart, Long> {
     Optional<Cart> findByUserSeqAndProductSeqAndOptionSeq(Long userSeq, Long productSeq, Long optionSeq);
 
     Optional<Cart> findByCartSeqAndUserSeq(Long cartSeq, Long userSeq);
+
+    List<Cart> findAllByCartSeqInAndUserSeq(Collection<Long> cartSeqs, Long userSeq);
 }

@@ -56,4 +56,11 @@ public class ProductOption extends BaseEntity {
         this.sortOrder = sortOrder != null ? sortOrder : 0;
         this.useYn = useYn != null ? useYn : "Y";
     }
+
+    /** 재고 차감. 부족하면 false 반환. */
+    public boolean decreaseStock(int quantity) {
+        if (stockQty == null || stockQty < quantity) return false;
+        this.stockQty = stockQty - quantity;
+        return true;
+    }
 }
