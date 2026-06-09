@@ -47,6 +47,15 @@ public enum ErrorCode {
 
     // RETURN (M5)
     RETURN_PERIOD_EXPIRED(HttpStatus.CONFLICT, "반품 가능 기간이 만료되었습니다."),
+    RETURN_ITEM_INVALID(HttpStatus.BAD_REQUEST, "반품 대상 주문 상품이 올바르지 않습니다."),
+    RETURN_QUANTITY_EXCEEDED(HttpStatus.BAD_REQUEST, "반품 수량이 주문 수량을 초과했습니다."),
+    RETURN_NOT_FOUND(HttpStatus.NOT_FOUND, "반품 신청을 찾을 수 없습니다."),
+    RETURN_EMPTY_ITEMS(HttpStatus.BAD_REQUEST, "반품 대상 상품이 없습니다."),
+
+    // REVIEW (M5)
+    REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "리뷰를 찾을 수 없습니다."),
+    REVIEW_NOT_ALLOWED(HttpStatus.FORBIDDEN, "리뷰를 작성할 수 없는 상품/주문입니다."),
+    REVIEW_ALREADY_WRITTEN(HttpStatus.CONFLICT, "이미 리뷰가 작성된 주문 상품입니다."),
 
     // COUPON / POINT (M6)
     COUPON_NOT_APPLICABLE(HttpStatus.BAD_REQUEST, "사용할 수 없는 쿠폰입니다."),

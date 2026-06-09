@@ -8,14 +8,14 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 /**
- * M2-T5 단계의 최소 매핑 — 상품 상세 리뷰 요약(count/avg)용.
- * 작성/수정/조회 정식 기능은 M5에서 확장된다.
+ * 상품 리뷰. M5에서 작성/수정/조회 정식 기능 활성화.
  */
 @Entity
 @Table(name = "dat_review")
@@ -55,4 +55,29 @@ public class Review extends BaseEntity {
     @JdbcTypeCode(SqlTypes.CHAR)
     @Column(name = "use_yn", length = 1)
     private String useYn;
+
+    @Builder
+    private Review(Long userSeq, Long productSeq, Long orderSeq, Long itemSeq,
+                   Integer rating, String title, String content, String imageUrls, String useYn) {
+        this.userSeq = userSeq;
+        this.productSeq = productSeq;
+        this.orderSeq = orderSeq;
+        this.itemSeq = itemSeq;
+        this.rating = rating;
+        this.title = title;
+        this.content = content;
+        this.imageUrls = imageUrls;
+        this.useYn = useYn != null ? useYn : "Y";
+    }
+
+    public void update(Integer rating, String title, String content, String imageUrls) {
+        if (rating != null) this.rating = rating;
+        if (title != null) this.title = title;
+        if (content != null) this.content = content;
+        if (imageUrls != null) this.imageUrls = imageUrls;
+    }
+
+    public void softDelete() {
+        this.useYn = "N";
+    }
 }
