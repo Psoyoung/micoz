@@ -50,3 +50,4 @@ replay_pid*
 
 # --- Local test fixtures (E2E payloads with fake credentials) ---
 .test/
+.playwright-mcp/
