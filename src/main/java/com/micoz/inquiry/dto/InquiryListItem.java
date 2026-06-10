@@ -1,0 +1,21 @@
+package com.micoz.inquiry.dto;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Builder;
+import lombok.Getter;
+
+import java.time.OffsetDateTime;
+
+@Getter
+@Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class InquiryListItem {
+    private Long inquirySeq;
+    private String inquiryNo;
+    private String inquiryType;
+    private String title;
+    private String inquiryStatus;
+    private String privateYn;
+    private OffsetDateTime createdDate;
+    private boolean hasReply;
+}
