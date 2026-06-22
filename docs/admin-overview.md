@@ -146,14 +146,28 @@
 
 ## 4. 결정 보류 항목 (모듈 분해 전 합의 필요)
 
+### 4.1 Foundation 항목 — ✅ 확정 완료 (2026-06-22, `docs/foundation-decisions.md`)
+
+| 항목 | 영향 모듈 | 확정 결과 |
+|---|---|---|
+| ✅ **FR-ADM-11 관리자 로그인 플로우** | F | **별도 진입점** `POST /api/v1/admin/auth/login` + 내부 role 게이트. UI는 `micoz.com/admin` 서브패스(CORS 동일 출처) |
+| ✅ **RBAC 세분화 단계** | F + 모두 | **단일 ADMIN 유지** + `@EnableMethodSecurity` 후크 확보. 다단계 예정 없음 |
+| ✅ **AdminPrincipal 분리 여부** | F | **UserPrincipal 재사용** (단일 role 단계 한정) |
+| ✅ **자기 자신 ADMIN role 변경/삭제 차단 규칙** | F, M | **균형 정책** — 본인 role 변경/소프트삭제/비활성화 차단 + 마지막 ADMIN 보호. 신규 에러 `ADMIN_SELF_LOCKOUT`, `ADMIN_LAST_ADMIN_PROTECTED`. 본인 비번 변경은 허용 |
+| ✅ **동적 검색 쿼리 도구 도입** | M, O, R, CS, C | **Spring Data Specification** — M 모듈 first try. 사용자 측 상품검색은 C 모듈에서 재검토 |
+| ✅ **`includeDeleted=true` 옵션 노출 여부** | 모두 | **옵션 노출(기본 false), `mst_*`에만 적용**. `dat_*`는 상태 전이라 미적용. 감사 로그는 S 모듈로 미룸 |
+
+**첫 관리자 부트스트랩 (확정)**: ROOT는 비상용 락드 계정으로 유지. 앱 기동 시 환경변수
+`ADMIN_INIT_PASSWORD` 기반으로 운영 관리자 1명 시드(계정 없으면 BCrypt 해시 생성·저장,
+첫 로그인 후 비번 변경 유도). **평문 비밀번호는 코드/마이그레이션/git에 절대 금지.**
+`userStatus` 로그인 검증은 M 모듈로 미룸(지금은 `useYn='Y'`만).
+
+> → F 모듈 task 분할: `docs/tasks-F-foundation.md`
+
+### 4.2 후속 모듈 항목 — 해당 모듈 진입 시 결정
+
 | 항목 | 영향 모듈 | 비고 |
 |---|---|---|
-| **FR-ADM-11 관리자 로그인 플로우** | F | PRD §11 블로커 — 사용자 로그인 재사용 vs 별도 진입점 |
-| **RBAC 세분화 단계** | F + 모두 | 단일 ADMIN vs SUPER_ADMIN/OPS/CS 등 다단계 |
-| **AdminPrincipal 분리 여부** | F | 단일 role이면 재사용으로 충분 |
-| **자기 자신 ADMIN role 변경/삭제 차단 규칙** | F, M | 관리자 자가 잠금 방지 |
-| **동적 검색 쿼리 도구 도입** | M, O, R, CS, C | Specification vs QueryDSL — 코드베이스 무도구 현황 |
-| **`includeDeleted=true` 옵션 노출 여부** | 모두 | 운영 디버깅 가치 vs 정책 누설 위험 |
 | **운송장 추적 외부 API** | O | PRD §11 — 사업자 미정. 수동 입력으로 우선 충족 |
 | **반품 환불 결제 취소** | R | PG 사업자 미정 — Mock 환불 시뮬레이션 가능 |
 | **대시보드 집계 캐싱** | D | 운영 인프라(Redis 등) 도입 결정 의존 |
