@@ -37,6 +37,7 @@ public class AuthService {
 
     private static final String DEFAULT_GRADE_CODE = "MEMBER";
     private static final String ROLE_CUSTOMER = "CUSTOMER";
+    private static final String ROLE_ADMIN = "ADMIN";
 
     /** 사용자 존재하지 않을 때 시간차 최소화용 dummy hash (BCrypt 12 stub) */
     private static final String DUMMY_BCRYPT_HASH =
@@ -104,22 +105,45 @@ public class AuthService {
 
     @Transactional
     public TokenResponse login(LoginRequest request, HttpServletRequest httpRequest) {
-        // 1. 사용자 조회 (없어도 dummy hash 비교로 시간차 최소화 — NFR-07)
-        User user = userRepository.findActiveByUserId(request.getUserId()).orElse(null);
-        String hashToCheck = (user != null) ? user.getUserPw() : DUMMY_BCRYPT_HASH;
-        boolean matches = passwordEncoder.matches(request.getUserPw(), hashToCheck);
+        User user = authenticateOrThrow(request.getUserId(), request.getUserPw());
+        return issueTokens(user, httpRequest);
+    }
 
+    /**
+     * 관리자 로그인 (FR-ADM-11, F-T2). 사용자 로그인과 자격증명 검증 흐름을 공유하되,
+     * 자격증명이 맞아도 role != ADMIN이면 동일하게 AUTH_INVALID_CREDENTIALS로 거부한다.
+     * (NFR-07 열거방지 — 일반 사용자가 관리자 로그인을 시도해도 응답/시간차 동일)
+     */
+    @Transactional
+    public TokenResponse adminLogin(LoginRequest request, HttpServletRequest httpRequest) {
+        User user = authenticateOrThrow(request.getUserId(), request.getUserPw());
+        if (!ROLE_ADMIN.equals(user.getUserRole())) {
+            throw new BusinessException(ErrorCode.AUTH_INVALID_CREDENTIALS);
+        }
+        return issueTokens(user, httpRequest);
+    }
+
+    /**
+     * 자격증명 검증. 사용자가 없어도 dummy hash 비교로 시간차를 최소화한다(NFR-07).
+     * 실패 시 AUTH_INVALID_CREDENTIALS.
+     */
+    private User authenticateOrThrow(String userId, String rawPassword) {
+        User user = userRepository.findActiveByUserId(userId).orElse(null);
+        String hashToCheck = (user != null) ? user.getUserPw() : DUMMY_BCRYPT_HASH;
+        boolean matches = passwordEncoder.matches(rawPassword, hashToCheck);
         if (user == null || !matches) {
             throw new BusinessException(ErrorCode.AUTH_INVALID_CREDENTIALS);
         }
+        return user;
+    }
 
-        // 2. access / refresh 생성
+    /** access 발급 + refresh(SHA-256 해시) 저장 + last_login_date 갱신. 로그인/관리자로그인 공통. */
+    private TokenResponse issueTokens(User user, HttpServletRequest httpRequest) {
         String accessToken = jwtTokenProvider.createAccessToken(
                 user.getUserSeq(), user.getUserId(), user.getUserRole());
         String refreshRaw = jwtTokenProvider.createRefreshToken();
         String refreshHash = HashUtil.sha256Hex(refreshRaw);
 
-        // 3. refresh 토큰 저장 (DB엔 해시만)
         Instant now = Instant.now();
         OffsetDateTime expireDate = jwtTokenProvider.getRefreshTokenExpiry(now)
                 .atOffset(ZoneOffset.UTC);
@@ -131,7 +155,6 @@ public class AuthService {
                 .build();
         refreshTokenRepository.save(token);
 
-        // 4. last_login_date 갱신
         user.updateLastLogin(OffsetDateTime.now(ZoneOffset.UTC));
 
         return TokenResponse.of(accessToken, refreshRaw, jwtTokenProvider.getAccessTokenValiditySeconds());

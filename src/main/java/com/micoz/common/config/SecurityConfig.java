@@ -46,6 +46,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // logout만 인증 필요 (현재 로그인 사용자가 호출)
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").authenticated()
+                        // 관리자 로그인 진입점은 비인증 허용 (그 외 /api/v1/admin/** 게이팅은 F-T3)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/admin/auth/login").permitAll()
                         .requestMatchers(
                                 "/api/v1/auth/**",
                                 "/v3/api-docs/**",

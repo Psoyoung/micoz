@@ -46,9 +46,10 @@ class AdminBootstrapRunnerTest {
     }
 
     @BeforeEach
-    void cleanAdmin() {
-        // ROOT 외 운영 관리자/테스트 admin 제거로 결정적 시작 상태 보장
-        jdbcTemplate.update("DELETE FROM mst_user WHERE user_id = ?", TEST_ADMIN_ID);
+    void cleanAdmins() {
+        // 본 테스트의 전제(운영 ADMIN 부재)를 보장 — ROOT 외 모든 ADMIN 제거.
+        // 공유 Testcontainer에서 다른 테스트가 만든 ADMIN의 간섭을 차단한다.
+        jdbcTemplate.update("DELETE FROM mst_user WHERE user_role = 'ADMIN' AND user_id <> 'ROOT'");
     }
 
     @Test
