@@ -16,6 +16,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     /** 운영 ADMIN 존재 여부 (ROOT 비상 계정 제외) — 부트스트랩 멱등 판정용 */
     boolean existsByUserRoleAndUseYnAndUserIdNot(String userRole, String useYn, String userId);
 
+    /** 활성 ADMIN 수 — 마지막 관리자 보호 판정용 */
+    long countByUserRoleAndUseYn(String userRole, String useYn);
+
     default Optional<User> findActiveByUserId(String userId) {
         return findByUserIdAndUseYn(userId, "Y");
     }
