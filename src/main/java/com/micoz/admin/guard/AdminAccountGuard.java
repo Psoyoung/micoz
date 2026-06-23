@@ -18,6 +18,7 @@ public class AdminAccountGuard {
 
     private static final String ROLE_ADMIN = "ADMIN";
     private static final String USE_Y = "Y";
+    private static final String RESERVED_ROOT_ID = "ROOT";
 
     private final UserRepository userRepository;
 
@@ -28,12 +29,16 @@ public class AdminAccountGuard {
         }
     }
 
-    /** 대상이 마지막 활성 ADMIN이면 변경 차단 (시스템 락아웃 방지). 대상이 관리자가 아니면 무관. */
+    /**
+     * 대상이 마지막 운영 ADMIN이면 변경 차단 (시스템 락아웃 방지). 대상이 관리자가 아니면 무관.
+     * 카운트는 ROOT(로그인 불가 비상 계정)를 제외해 부트스트랩 존재 판정과 기준을 통일한다.
+     */
     public void assertNotLastAdmin(User target) {
         if (!ROLE_ADMIN.equals(target.getUserRole())) {
             return;
         }
-        long activeAdmins = userRepository.countByUserRoleAndUseYn(ROLE_ADMIN, USE_Y);
+        long activeAdmins = userRepository.countByUserRoleAndUseYnAndUserIdNot(
+                ROLE_ADMIN, USE_Y, RESERVED_ROOT_ID);
         if (activeAdmins <= 1) {
             throw new BusinessException(ErrorCode.ADMIN_LAST_ADMIN_PROTECTED);
         }

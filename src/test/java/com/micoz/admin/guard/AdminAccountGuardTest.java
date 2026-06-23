@@ -51,9 +51,9 @@ class AdminAccountGuardTest {
     }
 
     @Test
-    @DisplayName("assertNotLastAdmin: 활성 ADMIN 1명일 때 그 ADMIN 대상이면 ADMIN_LAST_ADMIN_PROTECTED")
+    @DisplayName("assertNotLastAdmin: 운영 ADMIN(ROOT 제외) 1명일 때 그 ADMIN 대상이면 ADMIN_LAST_ADMIN_PROTECTED")
     void lastAdminBlocked() {
-        when(userRepository.countByUserRoleAndUseYn("ADMIN", "Y")).thenReturn(1L);
+        when(userRepository.countByUserRoleAndUseYnAndUserIdNot("ADMIN", "Y", "ROOT")).thenReturn(1L);
 
         assertThatThrownBy(() -> guard.assertNotLastAdmin(admin()))
                 .isInstanceOf(BusinessException.class)
@@ -62,9 +62,9 @@ class AdminAccountGuardTest {
     }
 
     @Test
-    @DisplayName("assertNotLastAdmin: 활성 ADMIN 2명 이상이면 통과")
+    @DisplayName("assertNotLastAdmin: 운영 ADMIN(ROOT 제외) 2명 이상이면 통과")
     void notLastAdminAllowed() {
-        when(userRepository.countByUserRoleAndUseYn("ADMIN", "Y")).thenReturn(2L);
+        when(userRepository.countByUserRoleAndUseYnAndUserIdNot("ADMIN", "Y", "ROOT")).thenReturn(2L);
 
         assertThatCode(() -> guard.assertNotLastAdmin(admin())).doesNotThrowAnyException();
     }

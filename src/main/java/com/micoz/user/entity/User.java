@@ -145,6 +145,11 @@ public class User extends BaseEntity {
         this.useYn = "N";
     }
 
+    /** 활성/비활성 토글 (관리자 상태 관리, F-T6). 비활성(N)은 로그인 차단 = 소프트삭제 대체. */
+    public void changeActivation(boolean active) {
+        this.useYn = active ? "Y" : "N";
+    }
+
     public void updateProfile(String userName, String email, String phone,
                               LocalDate birthDate, String zipCode,
                               String address, String addressDetail) {
