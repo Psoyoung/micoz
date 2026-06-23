@@ -46,7 +46,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // logout만 인증 필요 (현재 로그인 사용자가 호출)
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").authenticated()
-                        // 관리자 로그인 진입점은 비인증 허용 (그 외 /api/v1/admin/** 게이팅은 F-T3)
+                        // 관리자 로그인 진입점은 비인증 허용 (반드시 admin/** 게이팅보다 먼저 선언)
                         .requestMatchers(HttpMethod.POST, "/api/v1/admin/auth/login").permitAll()
                         .requestMatchers(
                                 "/api/v1/auth/**",
@@ -64,6 +64,8 @@ public class SecurityConfig {
                                 "/api/v1/products/**",
                                 "/api/v1/banners/**"
                         ).permitAll()
+                        // 관리자 영역 — ADMIN 권한 필수 (로그인 진입점 제외, 위에서 먼저 허용됨)
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(eh -> eh

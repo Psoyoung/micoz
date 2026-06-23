@@ -115,4 +115,24 @@ class AdminAuthIntegrationTest extends IntegrationTestSupport {
         ResponseEntity<String> me = getJson("/api/v1/me", access);
         assertThat(me.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
+
+    @Test
+    @DisplayName("게이팅(F-T3): 토큰 없이 /admin/me → 401 AUTH_UNAUTHORIZED")
+    void adminMeWithoutTokenReturns401() {
+        ResponseEntity<String> resp = rest.getForEntity(baseUrl() + "/api/v1/admin/me", String.class);
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(parse(resp.getBody()).path("code").asText()).isEqualTo("AUTH_UNAUTHORIZED");
+    }
+
+    @Test
+    @DisplayName("게이팅(F-T3): 사용자 토큰으로 /admin/me → 403 AUTH_FORBIDDEN")
+    void adminMeWithCustomerTokenReturns403() {
+        String customerToken = signupAndLogin();
+
+        ResponseEntity<String> resp = getJson("/api/v1/admin/me", customerToken);
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(parse(resp.getBody()).path("code").asText()).isEqualTo("AUTH_FORBIDDEN");
+    }
 }
