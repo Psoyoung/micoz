@@ -1,5 +1,6 @@
 package com.micoz.admin.member.service;
 
+import com.micoz.admin.member.dto.MemberDetailResponse;
 import com.micoz.admin.member.dto.MemberListItem;
 import com.micoz.admin.member.dto.MemberSearchCondition;
 import com.micoz.admin.member.spec.UserSpecs;
@@ -83,6 +84,61 @@ public class AdminMemberService {
                 .map(user -> toItem(user, gradeCodeBySeq))
                 .toList();
         return PageResponse.of(items, page);
+    }
+
+    /**
+     * 회원 상세 (M-T2). 대상이 CUSTOMER가 아니면 USER_NOT_FOUND(관리자 계정은 비노출).
+     * 비밀번호는 응답에 포함하지 않는다.
+     */
+    @Transactional(readOnly = true)
+    public MemberDetailResponse getDetail(Long userSeq) {
+        User user = userRepository.findById(userSeq)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        if (!ROLE_CUSTOMER.equals(user.getUserRole())) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        String gradeCode = null;
+        String gradeName = null;
+        if (user.getGradeSeq() != null) {
+            UserGrade grade = userGradeRepository.findById(user.getGradeSeq()).orElse(null);
+            if (grade != null) {
+                gradeCode = grade.getGradeCode();
+                gradeName = grade.getGradeName();
+            }
+        }
+
+        String referrerUserId = null;
+        if (user.getReferrerUserSeq() != null) {
+            referrerUserId = userRepository.findById(user.getReferrerUserSeq())
+                    .map(User::getUserId)
+                    .orElse(null);
+        }
+
+        return MemberDetailResponse.builder()
+                .userSeq(user.getUserSeq())
+                .userId(user.getUserId())
+                .userName(user.getUserName())
+                .userRole(user.getUserRole())
+                .gradeCode(gradeCode)
+                .gradeName(gradeName)
+                .userStatus(user.getUserStatus())
+                .useYn(user.getUseYn())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .birthDate(user.getBirthDate())
+                .zipCode(user.getZipCode())
+                .address(user.getAddress())
+                .addressDetail(user.getAddressDetail())
+                .memo(user.getMemo())
+                .pointBalance(user.getPointBalance())
+                .serviceYn(user.getServiceYn())
+                .privacyYn(user.getPrivacyYn())
+                .marketingYn(user.getMarketingYn())
+                .referrerUserId(referrerUserId)
+                .lastLoginDate(user.getLastLoginDate())
+                .joinedDate(user.getIDate())
+                .build();
     }
 
     /** 정렬 프로퍼티를 화이트리스트로 검증·치환. 미허용 컬럼이면 400. */

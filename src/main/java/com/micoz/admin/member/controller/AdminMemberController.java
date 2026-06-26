@@ -1,5 +1,6 @@
 package com.micoz.admin.member.controller;
 
+import com.micoz.admin.member.dto.MemberDetailResponse;
 import com.micoz.admin.member.dto.MemberListItem;
 import com.micoz.admin.member.dto.MemberSearchCondition;
 import com.micoz.admin.member.service.AdminMemberService;
@@ -12,6 +13,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -32,5 +34,10 @@ public class AdminMemberController {
             @ModelAttribute MemberSearchCondition condition,
             @PageableDefault(size = 20, sort = "userSeq", direction = Sort.Direction.DESC) Pageable pageable) {
         return ApiResponse.success(adminMemberService.search(condition, pageable));
+    }
+
+    @GetMapping("/{userSeq}")
+    public ApiResponse<MemberDetailResponse> detail(@PathVariable Long userSeq) {
+        return ApiResponse.success(adminMemberService.getDetail(userSeq));
     }
 }
