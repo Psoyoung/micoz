@@ -4,10 +4,11 @@ import com.micoz.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.Optional;
 
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
 
     /** 관리자 목록 (활성/비활성 모두 — 비활성 계정 재활성화 관리 목적) */
     Page<User> findByUserRole(String userRole, Pageable pageable);
