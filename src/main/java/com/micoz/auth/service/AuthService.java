@@ -39,6 +39,9 @@ public class AuthService {
     private static final String ROLE_CUSTOMER = "CUSTOMER";
     private static final String ROLE_ADMIN = "ADMIN";
 
+    /** 로그인 차단 상태 (M-T3.5). 탈퇴(use_yn='N')는 findActive 단계에서 이미 차단됨. */
+    private static final String STATUS_SUSPENDED = "SUSPENDED";
+
     /** 사용자 존재하지 않을 때 시간차 최소화용 dummy hash (BCrypt 12 stub) */
     private static final String DUMMY_BCRYPT_HASH =
             "$2a$12$invalidplaceholderxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
@@ -132,6 +135,11 @@ public class AuthService {
         String hashToCheck = (user != null) ? user.getUserPw() : DUMMY_BCRYPT_HASH;
         boolean matches = passwordEncoder.matches(rawPassword, hashToCheck);
         if (user == null || !matches) {
+            throw new BusinessException(ErrorCode.AUTH_INVALID_CREDENTIALS);
+        }
+        // 운영 상태 게이팅 (M-T3.5): SUSPENDED는 로그인 거부.
+        // 자격증명 확인 이후 판정 + 동일 응답으로 상태 비노출/시간차 최소화(NFR-07).
+        if (STATUS_SUSPENDED.equals(user.getUserStatus())) {
             throw new BusinessException(ErrorCode.AUTH_INVALID_CREDENTIALS);
         }
         return user;
