@@ -1,5 +1,7 @@
 package com.micoz.admin.member.controller;
 
+import com.micoz.admin.member.dto.CreateMemberRequest;
+import com.micoz.admin.member.dto.MemberCreatedResponse;
 import com.micoz.admin.member.dto.MemberDetailResponse;
 import com.micoz.admin.member.dto.MemberListItem;
 import com.micoz.admin.member.dto.MemberSearchCondition;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,6 +42,11 @@ public class AdminMemberController {
             @ModelAttribute MemberSearchCondition condition,
             @PageableDefault(size = 20, sort = "userSeq", direction = Sort.Direction.DESC) Pageable pageable) {
         return ApiResponse.success(adminMemberService.search(condition, pageable));
+    }
+
+    @PostMapping
+    public ApiResponse<MemberCreatedResponse> create(@Valid @RequestBody CreateMemberRequest request) {
+        return ApiResponse.success(adminMemberService.createMember(request));
     }
 
     @GetMapping("/{userSeq}")

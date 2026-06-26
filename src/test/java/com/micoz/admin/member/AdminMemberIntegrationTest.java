@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class AdminMemberIntegrationTest extends IntegrationTestSupport {
 
     private static final String ADMIN_PW = "MemberMgmt#Test1234";
+    private static final String MEMBER_PW = "NewMember#Test1234";
     private static final String DUMMY_HASH =
             "$2a$12$invalidplaceholderxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
 
@@ -154,6 +155,64 @@ class AdminMemberIntegrationTest extends IntegrationTestSupport {
                 adminToken, Map.of("status", "SUSPENDED"));
         assertThat(status.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(parse(status.getBody()).path("code").asText()).isEqualTo("USER_NOT_FOUND");
+    }
+
+    // ─────────────────────────── M-T4 회원 등록 ───────────────────────────
+    @Test
+    @DisplayName("회원 등록 → 200, 등록 계정으로 로그인 가능, 평문 비번 미노출")
+    void createMemberSuccess() {
+        String newId = "mtnew" + suffix();
+        ResponseEntity<String> resp = postJson("/api/v1/admin/members", adminToken,
+                Map.of("userId", newId, "userPw", MEMBER_PW, "userName", "신규회원", "gradeCode", "SELLER"));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(parse(resp.getBody()).path("data").path("userId").asText()).isEqualTo(newId);
+        assertThat(resp.getBody()).doesNotContain("userPw");
+        assertThat(resp.getBody()).doesNotContain("$2a$");
+
+        // 등록 계정 로그인 가능
+        ResponseEntity<String> login = rest.postForEntity(baseUrl() + "/api/v1/auth/login",
+                Map.of("userId", newId, "userPw", MEMBER_PW), String.class);
+        assertThat(login.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        // 등급 반영 확인
+        long seq = userSeqOf(newId);
+        assertThat(gradeSeqOf(seq)).isEqualTo(gradeSeq("SELLER"));
+    }
+
+    @Test
+    @DisplayName("등급 미지정 등록 → 기본 등급 MEMBER")
+    void createMemberDefaultGrade() {
+        String newId = "mtnew" + suffix();
+        ResponseEntity<String> resp = postJson("/api/v1/admin/members", adminToken,
+                Map.of("userId", newId, "userPw", MEMBER_PW, "userName", "기본등급회원"));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(gradeSeqOf(userSeqOf(newId))).isEqualTo(gradeSeq("MEMBER"));
+    }
+
+    @Test
+    @DisplayName("중복 아이디 등록 → 409 USER_DUPLICATED_ID")
+    void createMemberDuplicate() {
+        String dupId = "mtdup" + suffix();
+        insertCustomer(dupId, "기존회원", "MEMBER", null);
+
+        ResponseEntity<String> resp = postJson("/api/v1/admin/members", adminToken,
+                Map.of("userId", dupId, "userPw", MEMBER_PW, "userName", "중복회원"));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(parse(resp.getBody()).path("code").asText()).isEqualTo("USER_DUPLICATED_ID");
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 등급코드로 등록 → 404 GRADE_NOT_FOUND")
+    void createMemberUnknownGrade() {
+        String newId = "mtnew" + suffix();
+        ResponseEntity<String> resp = postJson("/api/v1/admin/members", adminToken,
+                Map.of("userId", newId, "userPw", MEMBER_PW, "userName", "회원", "gradeCode", "NOPE"));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(parse(resp.getBody()).path("code").asText()).isEqualTo("GRADE_NOT_FOUND");
     }
 
     // ─────────────────────────── helpers ───────────────────────────

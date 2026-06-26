@@ -1,5 +1,7 @@
 package com.micoz.admin.member.service;
 
+import com.micoz.admin.member.dto.CreateMemberRequest;
+import com.micoz.admin.member.dto.MemberCreatedResponse;
 import com.micoz.admin.member.dto.MemberDetailResponse;
 import com.micoz.admin.member.dto.MemberListItem;
 import com.micoz.admin.member.dto.MemberSearchCondition;
@@ -17,9 +19,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +40,7 @@ import java.util.stream.Collectors;
 public class AdminMemberService {
 
     private static final String ROLE_CUSTOMER = "CUSTOMER";
+    private static final String DEFAULT_GRADE_CODE = "MEMBER";
 
     /** 허용 운영 상태 (M-Q1 확정: WITHDRAWN 제외. 탈퇴는 use_yn 단독 표현). */
     private static final Set<String> ALLOWED_STATUSES = Set.of("ACTIVE", "DORMANT", "SUSPENDED");
@@ -55,6 +61,7 @@ public class AdminMemberService {
 
     private final UserRepository userRepository;
     private final UserGradeRepository userGradeRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
     public PageResponse<MemberListItem> search(MemberSearchCondition condition, Pageable pageable) {
@@ -141,6 +148,43 @@ public class AdminMemberService {
                 .build();
     }
 
+    /**
+     * 회원 등록 (M-T4). userId 중복 시 USER_DUPLICATED_ID, 미존재 등급 시 GRADE_NOT_FOUND.
+     * 비밀번호는 즉시 BCrypt(12) 해시(평문 미저장). role=CUSTOMER, 미지정 등급은 MEMBER.
+     */
+    @Transactional
+    public MemberCreatedResponse createMember(CreateMemberRequest request) {
+        if (userRepository.existsActiveByUserId(request.getUserId())) {
+            throw new BusinessException(ErrorCode.USER_DUPLICATED_ID);
+        }
+        String gradeCode = (request.getGradeCode() == null || request.getGradeCode().isBlank())
+                ? DEFAULT_GRADE_CODE : request.getGradeCode().trim();
+        UserGrade grade = userGradeRepository.findActiveByGradeCode(gradeCode)
+                .orElseThrow(() -> new BusinessException(ErrorCode.GRADE_NOT_FOUND));
+
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+        User member = User.builder()
+                .userId(request.getUserId())
+                .userPw(passwordEncoder.encode(request.getUserPw()))
+                .userName(request.getUserName())
+                .userRole(ROLE_CUSTOMER)
+                .gradeSeq(grade.getGradeSeq())
+                .email(blankToNull(request.getEmail()))
+                .phone(blankToNull(request.getPhone()))
+                .serviceYn("Y")
+                .privacyYn("Y")
+                .marketingYn("N")
+                .serviceAgreeDate(now)
+                .privacyAgreeDate(now)
+                .pointBalance(0)
+                .userStatus("ACTIVE")
+                .useYn("Y")
+                .referrerUserSeq(null)
+                .build();
+        User saved = userRepository.save(member);
+        return new MemberCreatedResponse(saved.getUserSeq(), saved.getUserId());
+    }
+
     /** 회원 등급 변경 (M-T3). 유효 등급(use_yn='Y')이 아니면 GRADE_NOT_FOUND. */
     @Transactional
     public void changeGrade(Long userSeq, String gradeCode) {
@@ -162,6 +206,10 @@ public class AdminMemberService {
             throw new BusinessException(ErrorCode.MEMBER_INVALID_STATUS);
         }
         member.changeStatus(normalized);
+    }
+
+    private String blankToNull(String value) {
+        return (value == null || value.isBlank()) ? null : value;
     }
 
     /** 회원(CUSTOMER) 조회 — 미존재 또는 비CUSTOMER(관리자 등)면 USER_NOT_FOUND로 비노출. */
