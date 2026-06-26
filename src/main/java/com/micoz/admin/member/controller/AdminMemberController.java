@@ -3,9 +3,12 @@ package com.micoz.admin.member.controller;
 import com.micoz.admin.member.dto.MemberDetailResponse;
 import com.micoz.admin.member.dto.MemberListItem;
 import com.micoz.admin.member.dto.MemberSearchCondition;
+import com.micoz.admin.member.dto.UpdateMemberGradeRequest;
+import com.micoz.admin.member.dto.UpdateMemberStatusRequest;
 import com.micoz.admin.member.service.AdminMemberService;
 import com.micoz.common.response.ApiResponse;
 import com.micoz.common.response.PageResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -13,7 +16,9 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -39,5 +44,21 @@ public class AdminMemberController {
     @GetMapping("/{userSeq}")
     public ApiResponse<MemberDetailResponse> detail(@PathVariable Long userSeq) {
         return ApiResponse.success(adminMemberService.getDetail(userSeq));
+    }
+
+    @PatchMapping("/{userSeq}/grade")
+    public ApiResponse<Void> changeGrade(
+            @PathVariable Long userSeq,
+            @Valid @RequestBody UpdateMemberGradeRequest request) {
+        adminMemberService.changeGrade(userSeq, request.getGradeCode());
+        return ApiResponse.success();
+    }
+
+    @PatchMapping("/{userSeq}/status")
+    public ApiResponse<Void> changeStatus(
+            @PathVariable Long userSeq,
+            @Valid @RequestBody UpdateMemberStatusRequest request) {
+        adminMemberService.changeStatus(userSeq, request.getStatus());
+        return ApiResponse.success();
     }
 }

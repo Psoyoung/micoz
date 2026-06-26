@@ -150,6 +150,16 @@ public class User extends BaseEntity {
         this.useYn = active ? "Y" : "N";
     }
 
+    /** 회원 등급 변경 (M-T3). gradeSeq는 호출 측에서 유효성 검증 후 전달. */
+    public void changeGrade(Long gradeSeq) {
+        this.gradeSeq = gradeSeq;
+    }
+
+    /** 회원 운영 상태 변경 (M-T3, ACTIVE/DORMANT/SUSPENDED). use_yn(탈퇴)과는 별개 개념. */
+    public void changeStatus(String userStatus) {
+        this.userStatus = userStatus;
+    }
+
     public void updateProfile(String userName, String email, String phone,
                               LocalDate birthDate, String zipCode,
                               String address, String addressDetail) {

@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -34,6 +35,9 @@ import java.util.stream.Collectors;
 public class AdminMemberService {
 
     private static final String ROLE_CUSTOMER = "CUSTOMER";
+
+    /** 허용 운영 상태 (M-Q1 확정: WITHDRAWN 제외. 탈퇴는 use_yn 단독 표현). */
+    private static final Set<String> ALLOWED_STATUSES = Set.of("ACTIVE", "DORMANT", "SUSPENDED");
 
     /**
      * 정렬 화이트리스트: API 정렬키 → 엔티티 프로퍼티.
@@ -92,11 +96,7 @@ public class AdminMemberService {
      */
     @Transactional(readOnly = true)
     public MemberDetailResponse getDetail(Long userSeq) {
-        User user = userRepository.findById(userSeq)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        if (!ROLE_CUSTOMER.equals(user.getUserRole())) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
-        }
+        User user = findCustomerOrThrow(userSeq);
 
         String gradeCode = null;
         String gradeName = null;
@@ -139,6 +139,39 @@ public class AdminMemberService {
                 .lastLoginDate(user.getLastLoginDate())
                 .joinedDate(user.getIDate())
                 .build();
+    }
+
+    /** 회원 등급 변경 (M-T3). 유효 등급(use_yn='Y')이 아니면 GRADE_NOT_FOUND. */
+    @Transactional
+    public void changeGrade(Long userSeq, String gradeCode) {
+        User member = findCustomerOrThrow(userSeq);
+        UserGrade grade = userGradeRepository.findActiveByGradeCode(gradeCode.trim())
+                .orElseThrow(() -> new BusinessException(ErrorCode.GRADE_NOT_FOUND));
+        member.changeGrade(grade.getGradeSeq());
+    }
+
+    /**
+     * 회원 운영 상태 변경 (M-T3). 허용값(ACTIVE/DORMANT/SUSPENDED) 외면 MEMBER_INVALID_STATUS.
+     * use_yn(탈퇴)은 건드리지 않는다.
+     */
+    @Transactional
+    public void changeStatus(Long userSeq, String status) {
+        User member = findCustomerOrThrow(userSeq);
+        String normalized = status.trim().toUpperCase();
+        if (!ALLOWED_STATUSES.contains(normalized)) {
+            throw new BusinessException(ErrorCode.MEMBER_INVALID_STATUS);
+        }
+        member.changeStatus(normalized);
+    }
+
+    /** 회원(CUSTOMER) 조회 — 미존재 또는 비CUSTOMER(관리자 등)면 USER_NOT_FOUND로 비노출. */
+    private User findCustomerOrThrow(Long userSeq) {
+        User user = userRepository.findById(userSeq)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        if (!ROLE_CUSTOMER.equals(user.getUserRole())) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+        return user;
     }
 
     /** 정렬 프로퍼티를 화이트리스트로 검증·치환. 미허용 컬럼이면 400. */

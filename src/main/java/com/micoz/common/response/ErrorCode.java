@@ -66,7 +66,11 @@ public enum ErrorCode {
 
     // ADMIN (M7 — Foundation)
     ADMIN_SELF_LOCKOUT(HttpStatus.CONFLICT, "본인 계정의 권한/상태를 변경할 수 없습니다."),
-    ADMIN_LAST_ADMIN_PROTECTED(HttpStatus.CONFLICT, "마지막 관리자 계정은 권한/상태를 변경할 수 없습니다.");
+    ADMIN_LAST_ADMIN_PROTECTED(HttpStatus.CONFLICT, "마지막 관리자 계정은 권한/상태를 변경할 수 없습니다."),
+
+    // MEMBER (M7 — Member 관리)
+    GRADE_NOT_FOUND(HttpStatus.NOT_FOUND, "등급을 찾을 수 없습니다."),
+    MEMBER_INVALID_STATUS(HttpStatus.BAD_REQUEST, "허용되지 않는 회원 상태입니다.");
 
     private final HttpStatus httpStatus;
     private final String defaultMessage;
