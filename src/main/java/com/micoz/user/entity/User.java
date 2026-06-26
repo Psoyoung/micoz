@@ -155,6 +155,11 @@ public class User extends BaseEntity {
         this.gradeSeq = gradeSeq;
     }
 
+    /** role 승강 (M-T6, ADMIN↔CUSTOMER). 등급은 호출 측에서 함께 조정(승격 null/강등 기본등급). */
+    public void changeRole(String userRole) {
+        this.userRole = userRole;
+    }
+
     /** 회원 운영 상태 변경 (M-T3, ACTIVE/DORMANT/SUSPENDED). use_yn(탈퇴)과는 별개 개념. */
     public void changeStatus(String userStatus) {
         this.userStatus = userStatus;

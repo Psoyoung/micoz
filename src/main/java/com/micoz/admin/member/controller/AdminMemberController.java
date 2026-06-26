@@ -8,8 +8,10 @@ import com.micoz.admin.member.dto.MemberSearchCondition;
 import com.micoz.admin.member.dto.PointAdjustRequest;
 import com.micoz.admin.member.dto.PointAdjustResponse;
 import com.micoz.admin.member.dto.UpdateMemberGradeRequest;
+import com.micoz.admin.member.dto.UpdateMemberRoleRequest;
 import com.micoz.admin.member.dto.UpdateMemberStatusRequest;
 import com.micoz.admin.member.service.AdminMemberService;
+import com.micoz.auth.security.UserPrincipal;
 import com.micoz.common.response.ApiResponse;
 import com.micoz.common.response.PageResponse;
 import jakarta.validation.Valid;
@@ -18,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -77,5 +80,14 @@ public class AdminMemberController {
             @PathVariable Long userSeq,
             @Valid @RequestBody PointAdjustRequest request) {
         return ApiResponse.success(adminMemberService.adjustPoint(userSeq, request.getAmount(), request.getReason()));
+    }
+
+    @PatchMapping("/{userSeq}/role")
+    public ApiResponse<Void> changeRole(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long userSeq,
+            @Valid @RequestBody UpdateMemberRoleRequest request) {
+        adminMemberService.changeRole(principal.getUserSeq(), userSeq, request.getRole());
+        return ApiResponse.success();
     }
 }

@@ -1,5 +1,6 @@
 package com.micoz.admin.member.service;
 
+import com.micoz.admin.guard.AdminAccountGuard;
 import com.micoz.admin.member.dto.CreateMemberRequest;
 import com.micoz.admin.member.dto.MemberCreatedResponse;
 import com.micoz.admin.member.dto.MemberDetailResponse;
@@ -43,7 +44,9 @@ import java.util.stream.Collectors;
 public class AdminMemberService {
 
     private static final String ROLE_CUSTOMER = "CUSTOMER";
+    private static final String ROLE_ADMIN = "ADMIN";
     private static final String DEFAULT_GRADE_CODE = "MEMBER";
+    private static final String RESERVED_ROOT_ID = "ROOT";
 
     /** 허용 운영 상태 (M-Q1 확정: WITHDRAWN 제외. 탈퇴는 use_yn 단독 표현). */
     private static final Set<String> ALLOWED_STATUSES = Set.of("ACTIVE", "DORMANT", "SUSPENDED");
@@ -65,6 +68,7 @@ public class AdminMemberService {
     private final UserRepository userRepository;
     private final UserGradeRepository userGradeRepository;
     private final PointHistoryRepository pointHistoryRepository;
+    private final AdminAccountGuard adminAccountGuard;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
@@ -245,6 +249,43 @@ public class AdminMemberService {
         PointHistory saved = pointHistoryRepository.save(history);
         member.changePointBalance(balanceAfter);
         return new PointAdjustResponse(userSeq, balanceAfter, saved.getPointSeq());
+    }
+
+    /**
+     * role 승강 (M-T6, ADMIN↔CUSTOMER). F-T5 AdminAccountGuard 재사용(신규 가드 금지).
+     * - 승격(→ADMIN): grade_seq=null(관리자는 등급 없음, 부트스트랩과 정합)
+     * - 강등(→CUSTOMER): 기본 등급 MEMBER 부여(없으면 GRADE_NOT_FOUND)
+     * - ROOT 대상 차단(ADMIN_ROOT_PROTECTED), 본인 변경 차단(ADMIN_SELF_LOCKOUT),
+     *   강등 시 마지막 운영 ADMIN 보호(ADMIN_LAST_ADMIN_PROTECTED, ROOT 제외 카운트)
+     */
+    @Transactional
+    public void changeRole(Long actingAdminSeq, Long targetSeq, String role) {
+        String targetRole = role.trim().toUpperCase();
+        if (!ROLE_ADMIN.equals(targetRole) && !ROLE_CUSTOMER.equals(targetRole)) {
+            throw new BusinessException(ErrorCode.COMMON_VALIDATION_ERROR);
+        }
+
+        User user = userRepository.findById(targetSeq)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        if (RESERVED_ROOT_ID.equals(user.getUserId())) {
+            throw new BusinessException(ErrorCode.ADMIN_ROOT_PROTECTED);
+        }
+        adminAccountGuard.assertNotSelf(actingAdminSeq, targetSeq);
+
+        if (ROLE_ADMIN.equals(targetRole)) {
+            user.changeRole(ROLE_ADMIN);
+            user.changeGrade(null);
+        } else {
+            // 강등: 마지막 운영 ADMIN 보호(대상이 ADMIN일 때만 의미). 그 후 기본 등급 부여.
+            // 주의: 현재 role 강등 경로에선 실행 주체도 운영 ADMIN으로 카운트되어, 이 가드는
+            // self-lockout(위 assertNotSelf)에 가려 런타임 도달 불가다. 위임/시스템 강등 경로가
+            // 생기면 활성화되므로 방어적으로 유지한다(미사용 오인 삭제 금지). 단위검증: AdminAccountGuardTest.
+            adminAccountGuard.assertNotLastAdmin(user);
+            UserGrade grade = userGradeRepository.findActiveByGradeCode(DEFAULT_GRADE_CODE)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.GRADE_NOT_FOUND));
+            user.changeRole(ROLE_CUSTOMER);
+            user.changeGrade(grade.getGradeSeq());
+        }
     }
 
     private String blankToNull(String value) {
