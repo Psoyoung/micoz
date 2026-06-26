@@ -5,10 +5,13 @@ import com.micoz.admin.member.dto.MemberCreatedResponse;
 import com.micoz.admin.member.dto.MemberDetailResponse;
 import com.micoz.admin.member.dto.MemberListItem;
 import com.micoz.admin.member.dto.MemberSearchCondition;
+import com.micoz.admin.member.dto.PointAdjustResponse;
 import com.micoz.admin.member.spec.UserSpecs;
 import com.micoz.common.exception.BusinessException;
 import com.micoz.common.response.ErrorCode;
 import com.micoz.common.response.PageResponse;
+import com.micoz.promotion.entity.PointHistory;
+import com.micoz.promotion.repository.PointHistoryRepository;
 import com.micoz.user.entity.User;
 import com.micoz.user.entity.UserGrade;
 import com.micoz.user.repository.UserGradeRepository;
@@ -61,6 +64,7 @@ public class AdminMemberService {
 
     private final UserRepository userRepository;
     private final UserGradeRepository userGradeRepository;
+    private final PointHistoryRepository pointHistoryRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
@@ -206,6 +210,41 @@ public class AdminMemberService {
             throw new BusinessException(ErrorCode.MEMBER_INVALID_STATUS);
         }
         member.changeStatus(normalized);
+    }
+
+    /**
+     * 포인트 수동 조정 (M-T5, 참고용). amount 부호: 양수=적립(EARN)/음수=차감(USE).
+     * 단일 트랜잭션 read-modify-write: 잔액 계산 → 음수면 POINT_INSUFFICIENT(롤백) →
+     * his_point(append-only) 기록 + user.point_balance 갱신을 원자적으로 수행.
+     */
+    @Transactional
+    public PointAdjustResponse adjustPoint(Long userSeq, Integer amount, String reason) {
+        if (amount == null || amount == 0) {
+            throw new BusinessException(ErrorCode.COMMON_VALIDATION_ERROR);
+        }
+        User member = findCustomerOrThrow(userSeq);
+        int current = member.getPointBalance() != null ? member.getPointBalance() : 0;
+        // long으로 합산해 int 오버플로 제거. 새 잔액은 1회만 계산해 이력·현재잔액에 동일 적용.
+        long projected = (long) current + amount;
+        if (projected < 0) {
+            throw new BusinessException(ErrorCode.POINT_INSUFFICIENT);
+        }
+        if (projected > Integer.MAX_VALUE) {
+            throw new BusinessException(ErrorCode.COMMON_VALIDATION_ERROR); // point_balance(INTEGER) 상한 초과
+        }
+        int balanceAfter = (int) projected;
+
+        PointHistory history = PointHistory.builder()
+                .userSeq(userSeq)
+                .pointType(amount > 0 ? "EARN" : "USE")
+                .pointAmount(amount)
+                .balanceAfter(balanceAfter)
+                .reason(reason)
+                .useYn("Y")
+                .build();
+        PointHistory saved = pointHistoryRepository.save(history);
+        member.changePointBalance(balanceAfter);
+        return new PointAdjustResponse(userSeq, balanceAfter, saved.getPointSeq());
     }
 
     private String blankToNull(String value) {

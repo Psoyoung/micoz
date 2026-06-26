@@ -5,6 +5,8 @@ import com.micoz.admin.member.dto.MemberCreatedResponse;
 import com.micoz.admin.member.dto.MemberDetailResponse;
 import com.micoz.admin.member.dto.MemberListItem;
 import com.micoz.admin.member.dto.MemberSearchCondition;
+import com.micoz.admin.member.dto.PointAdjustRequest;
+import com.micoz.admin.member.dto.PointAdjustResponse;
 import com.micoz.admin.member.dto.UpdateMemberGradeRequest;
 import com.micoz.admin.member.dto.UpdateMemberStatusRequest;
 import com.micoz.admin.member.service.AdminMemberService;
@@ -68,5 +70,12 @@ public class AdminMemberController {
             @Valid @RequestBody UpdateMemberStatusRequest request) {
         adminMemberService.changeStatus(userSeq, request.getStatus());
         return ApiResponse.success();
+    }
+
+    @PostMapping("/{userSeq}/points")
+    public ApiResponse<PointAdjustResponse> adjustPoint(
+            @PathVariable Long userSeq,
+            @Valid @RequestBody PointAdjustRequest request) {
+        return ApiResponse.success(adminMemberService.adjustPoint(userSeq, request.getAmount(), request.getReason()));
     }
 }

@@ -160,6 +160,11 @@ public class User extends BaseEntity {
         this.userStatus = userStatus;
     }
 
+    /** 포인트 잔액 설정 (M-T5 수동 조정). 음수 방지 검증은 호출 측 트랜잭션에서 수행. */
+    public void changePointBalance(int balance) {
+        this.pointBalance = balance;
+    }
+
     public void updateProfile(String userName, String email, String phone,
                               LocalDate birthDate, String zipCode,
                               String address, String addressDetail) {

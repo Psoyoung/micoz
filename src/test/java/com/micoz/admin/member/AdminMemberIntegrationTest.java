@@ -49,6 +49,8 @@ class AdminMemberIntegrationTest extends IntegrationTestSupport {
 
     @AfterEach
     void cleanup() {
+        jdbcTemplate.update(
+                "DELETE FROM his_point WHERE user_seq IN (SELECT user_seq FROM mst_user WHERE user_id LIKE 'mt%')");
         jdbcTemplate.update("DELETE FROM mst_user WHERE user_id LIKE 'mt%'");
     }
 
@@ -215,7 +217,133 @@ class AdminMemberIntegrationTest extends IntegrationTestSupport {
         assertThat(parse(resp.getBody()).path("code").asText()).isEqualTo("GRADE_NOT_FOUND");
     }
 
+    // ─────────────────────────── M-T5 포인트 수동 조정 ───────────────────────────
+    @Test
+    @DisplayName("포인트 적립(+) → 200, point_balance==balance_after 정합 + his_point 1건(i_user 기록)")
+    void pointEarn() {
+        long seq = insertCustomer("mtpt" + suffix(), "포인트회원", "MEMBER", null);
+
+        ResponseEntity<String> resp = postJson("/api/v1/admin/members/" + seq + "/points",
+                adminToken, Map.of("amount", 500, "reason", "운영 보상"));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(parse(resp.getBody()).path("data").path("pointBalance").asInt()).isEqualTo(500);
+        assertThat(pointBalanceOf(seq)).isEqualTo(500);
+        assertThat(latestBalanceAfter(seq)).isEqualTo(500);
+        assertThat(hisPointCount(seq)).isEqualTo(1);
+        assertThat(latestPointIUser(seq)).isEqualTo(adminId);
+    }
+
+    @Test
+    @DisplayName("포인트 차감(-) → 200, 잔액 감소")
+    void pointDeduct() {
+        long seq = insertCustomer("mtpt" + suffix(), "포인트회원", "MEMBER", null);
+        postJson("/api/v1/admin/members/" + seq + "/points", adminToken,
+                Map.of("amount", 500, "reason", "적립"));
+
+        ResponseEntity<String> resp = postJson("/api/v1/admin/members/" + seq + "/points",
+                adminToken, Map.of("amount", -200, "reason", "차감"));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(pointBalanceOf(seq)).isEqualTo(300);
+    }
+
+    @Test
+    @DisplayName("과차감(잔액 음수) → 400 POINT_INSUFFICIENT + 잔액·his_point 무변화(롤백)")
+    void pointOverDeductRollback() {
+        long seq = insertCustomer("mtpt" + suffix(), "포인트회원", "MEMBER", null);
+        postJson("/api/v1/admin/members/" + seq + "/points", adminToken,
+                Map.of("amount", 100, "reason", "적립"));
+        int balanceBefore = pointBalanceOf(seq);
+        int countBefore = hisPointCount(seq);
+
+        ResponseEntity<String> resp = postJson("/api/v1/admin/members/" + seq + "/points",
+                adminToken, Map.of("amount", -500, "reason", "과차감"));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(parse(resp.getBody()).path("code").asText()).isEqualTo("POINT_INSUFFICIENT");
+        // 롤백: 잔액·이력 모두 그대로
+        assertThat(pointBalanceOf(seq)).isEqualTo(balanceBefore);
+        assertThat(hisPointCount(seq)).isEqualTo(countBefore);
+    }
+
+    @Test
+    @DisplayName("차감으로 잔액이 정확히 0 → 200 허용 (<0 기준)")
+    void pointDeductToExactlyZero() {
+        long seq = insertCustomer("mtpt" + suffix(), "포인트회원", "MEMBER", null);
+        postJson("/api/v1/admin/members/" + seq + "/points", adminToken,
+                Map.of("amount", 100, "reason", "적립"));
+
+        ResponseEntity<String> resp = postJson("/api/v1/admin/members/" + seq + "/points",
+                adminToken, Map.of("amount", -100, "reason", "전액 차감"));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(pointBalanceOf(seq)).isZero();
+        assertThat(latestBalanceAfter(seq)).isZero();
+    }
+
+    @Test
+    @DisplayName("합산 상한 초과(오버플로 가드) → 400 COMMON_VALIDATION_ERROR + 롤백")
+    void pointUpperLimitGuard() {
+        long seq = insertCustomer("mtpt" + suffix(), "포인트회원", "MEMBER", null);
+        // 잔액을 INTEGER 상한까지 적립(허용, ==Max)
+        ResponseEntity<String> toMax = postJson("/api/v1/admin/members/" + seq + "/points",
+                adminToken, Map.of("amount", Integer.MAX_VALUE, "reason", "상한까지"));
+        assertThat(toMax.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(pointBalanceOf(seq)).isEqualTo(Integer.MAX_VALUE);
+
+        // 추가 +1 → long 합산이 Max 초과 → 거부(int였다면 음수 wrap되어 POINT_INSUFFICIENT로 오판)
+        ResponseEntity<String> overflow = postJson("/api/v1/admin/members/" + seq + "/points",
+                adminToken, Map.of("amount", 1, "reason", "상한 초과"));
+        assertThat(overflow.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(parse(overflow.getBody()).path("code").asText()).isEqualTo("COMMON_VALIDATION_ERROR");
+        // 롤백: 잔액 그대로
+        assertThat(pointBalanceOf(seq)).isEqualTo(Integer.MAX_VALUE);
+    }
+
+    @Test
+    @DisplayName("amount=0 → 400 COMMON_VALIDATION_ERROR")
+    void pointZeroInvalid() {
+        long seq = insertCustomer("mtpt" + suffix(), "포인트회원", "MEMBER", null);
+        ResponseEntity<String> resp = postJson("/api/v1/admin/members/" + seq + "/points",
+                adminToken, Map.of("amount", 0, "reason", "영"));
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(parse(resp.getBody()).path("code").asText()).isEqualTo("COMMON_VALIDATION_ERROR");
+    }
+
+    @Test
+    @DisplayName("비CUSTOMER(관리자) 대상 포인트 조정 → 404 USER_NOT_FOUND")
+    void pointNonCustomer() {
+        long adminSeq = userSeqOf(adminId);
+        ResponseEntity<String> resp = postJson("/api/v1/admin/members/" + adminSeq + "/points",
+                adminToken, Map.of("amount", 100, "reason", "x"));
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(parse(resp.getBody()).path("code").asText()).isEqualTo("USER_NOT_FOUND");
+    }
+
     // ─────────────────────────── helpers ───────────────────────────
+    private int pointBalanceOf(long userSeq) {
+        return jdbcTemplate.queryForObject(
+                "SELECT point_balance FROM mst_user WHERE user_seq = ?", Integer.class, userSeq);
+    }
+
+    private int hisPointCount(long userSeq) {
+        return jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM his_point WHERE user_seq = ?", Integer.class, userSeq);
+    }
+
+    private int latestBalanceAfter(long userSeq) {
+        return jdbcTemplate.queryForObject(
+                "SELECT balance_after FROM his_point WHERE user_seq = ? ORDER BY point_seq DESC LIMIT 1",
+                Integer.class, userSeq);
+    }
+
+    private String latestPointIUser(long userSeq) {
+        return jdbcTemplate.queryForObject(
+                "SELECT i_user FROM his_point WHERE user_seq = ? ORDER BY point_seq DESC LIMIT 1",
+                String.class, userSeq);
+    }
+
     private Long gradeSeqOf(long userSeq) {
         return jdbcTemplate.queryForObject(
                 "SELECT grade_seq FROM mst_user WHERE user_seq = ?", Long.class, userSeq);

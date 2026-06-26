@@ -8,6 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -52,4 +53,17 @@ public class PointHistory extends BaseCreatedEntity {
     @JdbcTypeCode(SqlTypes.CHAR)
     @Column(name = "use_yn", length = 1)
     private String useYn;
+
+    @Builder
+    private PointHistory(Long userSeq, String pointType, Integer pointAmount, Integer balanceAfter,
+                         String reason, Long orderSeq, OffsetDateTime expireDate, String useYn) {
+        this.userSeq = userSeq;
+        this.pointType = pointType;
+        this.pointAmount = pointAmount;
+        this.balanceAfter = balanceAfter;
+        this.reason = reason;
+        this.orderSeq = orderSeq;
+        this.expireDate = expireDate;
+        this.useYn = useYn;
+    }
 }
