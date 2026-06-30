@@ -60,4 +60,18 @@ public class Category extends BaseEntity {
         this.displayYn = displayYn != null ? displayYn : "Y";
         this.useYn = useYn != null ? useYn : "Y";
     }
+
+    /** 카테고리 정보 수정 (C-T1). null 필드는 미변경(부분 수정). 부모/레벨은 불변(2단계 고정). */
+    public void updateInfo(String categoryName, String urlSlug, Integer sortOrder, String displayYn) {
+        if (categoryName != null) this.categoryName = categoryName;
+        if (urlSlug != null) this.urlSlug = urlSlug;
+        if (sortOrder != null) this.sortOrder = sortOrder;
+        if (displayYn != null) this.displayYn = displayYn;
+    }
+
+    /** 소프트삭제 (C-T1). use_yn='N' + display_yn='N' 동시 세팅(노출 차단). */
+    public void softDelete() {
+        this.useYn = "N";
+        this.displayYn = "N";
+    }
 }

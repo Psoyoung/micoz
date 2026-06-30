@@ -71,7 +71,13 @@ public enum ErrorCode {
 
     // MEMBER (M7 — Member 관리)
     GRADE_NOT_FOUND(HttpStatus.NOT_FOUND, "등급을 찾을 수 없습니다."),
-    MEMBER_INVALID_STATUS(HttpStatus.BAD_REQUEST, "허용되지 않는 회원 상태입니다.");
+    MEMBER_INVALID_STATUS(HttpStatus.BAD_REQUEST, "허용되지 않는 회원 상태입니다."),
+
+    // CATALOG — Category (M7 C-T1)
+    CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "카테고리를 찾을 수 없습니다."),
+    CATEGORY_HAS_CHILDREN(HttpStatus.CONFLICT, "하위 카테고리 또는 소속 상품이 있어 삭제할 수 없습니다."),
+    CATEGORY_DUPLICATED_SLUG(HttpStatus.CONFLICT, "이미 사용 중인 URL 슬러그입니다."),
+    CATEGORY_INVALID_PARENT(HttpStatus.BAD_REQUEST, "상위 카테고리가 올바르지 않습니다.");
 
     private final HttpStatus httpStatus;
     private final String defaultMessage;
