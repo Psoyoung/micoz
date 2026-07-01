@@ -101,4 +101,10 @@ public class Product extends BaseEntity {
     public void changeStatus(String productStatus) {
         this.productStatus = productStatus;
     }
+
+    /** 소프트삭제 (C-T5). use_yn='N' + display_yn='N' 동시 세팅(노출 차단). */
+    public void softDelete() {
+        this.useYn = "N";
+        this.displayYn = "N";
+    }
 }

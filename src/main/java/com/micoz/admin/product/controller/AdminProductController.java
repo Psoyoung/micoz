@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -78,6 +79,13 @@ public class AdminProductController {
             @PathVariable Long optionSeq,
             @Valid @RequestBody UpdateStockRequest request) {
         adminProductService.changeStock(productSeq, optionSeq, request.getStockQty());
+        return ApiResponse.success();
+    }
+
+    /** 소프트삭제(C-T5). 하드삭제는 노출하지 않는다(주문 이력 보존, C-Q5). */
+    @DeleteMapping("/{productSeq}")
+    public ApiResponse<Void> delete(@PathVariable Long productSeq) {
+        adminProductService.deleteProduct(productSeq);
         return ApiResponse.success();
     }
 }

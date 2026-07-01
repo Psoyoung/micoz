@@ -20,6 +20,9 @@ public interface ProductOptionRepository extends JpaRepository<ProductOption, Lo
     java.util.Optional<ProductOption> findByOptionSeqAndProductSeqAndUseYn(
             Long optionSeq, Long productSeq, String useYn);
 
+    /** 상품 하드삭제 시 자식 물리삭제(C-T5, 미노출 배치 경로용). */
+    void deleteByProductSeq(Long productSeq);
+
     // ── 관리자 (C-T2) ──────────────────────────────────────────
     /** 상품별 활성 옵션 재고 합을 1회 집계 — 목록 totalStock 매핑 시 N+1 방지. */
     @Query("select o.productSeq as productSeq, coalesce(sum(o.stockQty), 0) as totalStock "

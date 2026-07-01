@@ -13,4 +13,7 @@ public interface MapProductLabelRepository
     List<MapProductLabel> findAllByLabelSeq(Long labelSeq);
 
     List<MapProductLabel> findAllByProductSeqIn(java.util.Collection<Long> productSeqs);
+
+    /** 상품 하드삭제 시 라벨 매핑 물리삭제(C-T5, 미노출 배치 경로용). */
+    void deleteByProductSeq(Long productSeq);
 }

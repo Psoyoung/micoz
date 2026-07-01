@@ -20,4 +20,7 @@ public interface ProductImageRepository extends JpaRepository<ProductImage, Long
     default List<ProductImage> findActiveMainByProductSeq(Long productSeq) {
         return findAllByProductSeqAndImageTypeAndUseYnOrderBySortOrderAsc(productSeq, "MAIN", "Y");
     }
+
+    /** 상품 하드삭제 시 자식 물리삭제(C-T5, 미노출 배치 경로용). */
+    void deleteByProductSeq(Long productSeq);
 }

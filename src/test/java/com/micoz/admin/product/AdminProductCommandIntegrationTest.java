@@ -1,6 +1,8 @@
 package com.micoz.admin.product;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.micoz.admin.product.service.AdminProductService;
+import com.micoz.common.exception.BusinessException;
 import com.micoz.support.IntegrationTestSupport;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * C-T3 상품 등록·수정(옵션·이미지·라벨 일괄) E2E. 핵심: 단일 트랜잭션 원자성(자식 실패 시 전체 롤백),
@@ -33,6 +36,9 @@ class AdminProductCommandIntegrationTest extends IntegrationTestSupport {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private AdminProductService adminProductService;
 
     private String adminToken;
     private String sfx;
@@ -62,6 +68,8 @@ class AdminProductCommandIntegrationTest extends IntegrationTestSupport {
 
     @AfterEach
     void cleanup() {
+        jdbcTemplate.update("DELETE FROM dat_order_item WHERE order_seq IN (SELECT order_seq FROM dat_order WHERE order_no LIKE 'CT-ORD-%')");
+        jdbcTemplate.update("DELETE FROM dat_order      WHERE order_no LIKE 'CT-ORD-%'");
         jdbcTemplate.update("DELETE FROM map_product_label  WHERE product_seq IN (SELECT product_seq FROM mst_product WHERE product_code LIKE 'CT-%')");
         jdbcTemplate.update("DELETE FROM mst_product_option WHERE product_seq IN (SELECT product_seq FROM mst_product WHERE product_code LIKE 'CT-%')");
         jdbcTemplate.update("DELETE FROM mst_product_image  WHERE product_seq IN (SELECT product_seq FROM mst_product WHERE product_code LIKE 'CT-%')");
@@ -279,6 +287,75 @@ class AdminProductCommandIntegrationTest extends IntegrationTestSupport {
         assertThat(parse(resp.getBody()).path("code").asText()).isEqualTo("PRODUCT_NOT_FOUND");
     }
 
+    // ───────────────────── C-T5 소프트삭제 + 주문참조 가드 ─────────────────────
+    @Test
+    @DisplayName("소프트삭제 → 200 + 상품 use_yn='N'·display_yn='N' + 옵션·이미지 동반 소프트삭제")
+    void deleteSoftWithoutOrders() {
+        String code = "CT-DEL-" + sfx;
+        Map<String, Object> body = baseCreate(code, "삭제대상", 1000);
+        body.put("categorySeq", catA);
+        body.put("options", List.of(option(null, "o1", 1000, 5, 1)));
+        body.put("images", List.of(image(null, "MAIN", "https://cdn.example/d.jpg", "x", 1)));
+        long seq = parse(postJson(PRODUCTS, adminToken, body).getBody()).path("data").path("productSeq").asLong();
+
+        ResponseEntity<String> resp = deleteJson(PRODUCTS + "/" + seq, adminToken);
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        Map<String, Object> row = jdbcTemplate.queryForMap(
+                "SELECT use_yn, display_yn FROM mst_product WHERE product_seq = ?", seq);
+        assertThat(row.get("use_yn").toString().trim()).isEqualTo("N");
+        assertThat(row.get("display_yn").toString().trim()).isEqualTo("N");
+        // 자식 동반 소프트삭제: 활성 옵션·이미지 0건
+        assertThat(activeOptionCount(seq)).isZero();
+        assertThat(activeImageCount(seq)).isZero();
+    }
+
+    @Test
+    @DisplayName("주문 이력 있어도 소프트삭제는 성공(200) + 주문 스냅샷 보존")
+    void deleteSoftWithOrders() {
+        String code = "CT-DELORD-" + sfx;
+        long seq = createProduct(code, "주문상품", 1000, catA);
+        insertOrderReferencing(seq, code);
+
+        ResponseEntity<String> resp = deleteJson(PRODUCTS + "/" + seq, adminToken);
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(useYnOfProduct(seq)).isEqualTo("N");
+        // 주문 스냅샷(dat_order_item) 보존
+        assertThat(orderItemCountForProduct(seq)).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("미존재 상품 삭제 → 404 PRODUCT_NOT_FOUND")
+    void deleteNotFound() {
+        ResponseEntity<String> resp = deleteJson(PRODUCTS + "/99999999", adminToken);
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(parse(resp.getBody()).path("code").asText()).isEqualTo("PRODUCT_NOT_FOUND");
+    }
+
+    @Test
+    @DisplayName("[가드] 주문 이력 있는 상품 하드삭제 시도 → PRODUCT_HAS_ORDERS (상품 보존)")
+    void hardDeleteBlockedByOrders() {
+        String code = "CT-HARDORD-" + sfx;
+        long seq = createProduct(code, "주문상품", 1000, catA);
+        insertOrderReferencing(seq, code);
+
+        assertThatThrownBy(() -> adminProductService.hardDeleteProduct(seq))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(e -> assertThat(((BusinessException) e).getErrorCode().name()).isEqualTo("PRODUCT_HAS_ORDERS"));
+        // 차단됐으므로 상품·주문 그대로
+        assertThat(countProductByCode(code)).isEqualTo(1);
+        assertThat(orderItemCountForProduct(seq)).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("[가드] 주문 이력 없는 상품 하드삭제 → 물리삭제(상품·옵션 0건)")
+    void hardDeleteRemovesWhenNoOrders() {
+        long[] ps = createProductWithOption("CT-HARDOK-" + sfx, "opt");
+        adminProductService.hardDeleteProduct(ps[0]);
+        assertThat(countProductByCode("CT-HARDOK-" + sfx)).isZero();
+        assertThat(optionRowCount(ps[1])).isZero();
+    }
+
     // ───────────────────── C-T4 재고·판매상태 ─────────────────────
     @Test
     @DisplayName("판매상태 변경(유효) → 200 + DB 반영")
@@ -453,6 +530,44 @@ class AdminProductCommandIntegrationTest extends IntegrationTestSupport {
     private long countProductByCode(String code) {
         return jdbcTemplate.queryForObject(
                 "SELECT count(*) FROM mst_product WHERE product_code = ?", Long.class, code);
+    }
+
+    private String useYnOfProduct(long productSeq) {
+        return jdbcTemplate.queryForObject(
+                "SELECT use_yn FROM mst_product WHERE product_seq = ?", String.class, productSeq).trim();
+    }
+
+    private long activeOptionCount(long productSeq) {
+        return jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM mst_product_option WHERE product_seq = ? AND use_yn = 'Y'", Long.class, productSeq);
+    }
+
+    private long activeImageCount(long productSeq) {
+        return jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM mst_product_image WHERE product_seq = ? AND use_yn = 'Y'", Long.class, productSeq);
+    }
+
+    private long optionRowCount(long optionSeq) {
+        return jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM mst_product_option WHERE option_seq = ?", Long.class, optionSeq);
+    }
+
+    private long orderItemCountForProduct(long productSeq) {
+        return jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM dat_order_item WHERE product_seq = ?", Long.class, productSeq);
+    }
+
+    private void insertOrderReferencing(long productSeq, String productCode) {
+        String orderNo = "CT-ORD-" + sfx + "-" + productSeq;
+        jdbcTemplate.update(
+                "INSERT INTO dat_order (order_no, user_seq, order_status, final_amount, i_user) "
+                        + "VALUES (?, 1, 'PAID', 1000, 'TEST')", orderNo);
+        Long orderSeq = jdbcTemplate.queryForObject(
+                "SELECT order_seq FROM dat_order WHERE order_no = ?", Long.class, orderNo);
+        jdbcTemplate.update(
+                "INSERT INTO dat_order_item (order_seq, product_seq, product_code, product_name, "
+                        + "unit_price, quantity, item_amount, i_user) VALUES (?, ?, ?, '주문스냅샷', 1000, 1, 1000, 'TEST')",
+                orderSeq, productSeq, productCode);
     }
 
     private long insertCategory(String name, String slug) {

@@ -15,6 +15,7 @@ import com.micoz.category.repository.CategoryRepository;
 import com.micoz.common.exception.BusinessException;
 import com.micoz.common.response.ErrorCode;
 import com.micoz.common.response.PageResponse;
+import com.micoz.order.repository.OrderItemRepository;
 import com.micoz.product.entity.MapProductLabel;
 import com.micoz.product.entity.Product;
 import com.micoz.product.entity.ProductImage;
@@ -76,6 +77,7 @@ public class AdminProductService {
     private final MapProductLabelRepository mapProductLabelRepository;
     private final ProductLabelRepository productLabelRepository;
     private final CategoryRepository categoryRepository;
+    private final OrderItemRepository orderItemRepository;
 
     @Transactional(readOnly = true)
     public PageResponse<AdminProductListItem> search(ProductSearchCondition condition, Pageable pageable) {
@@ -399,6 +401,42 @@ public class AdminProductService {
                 .findByOptionSeqAndProductSeqAndUseYn(optionSeq, productSeq, USE_Y)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_OPTION_NOT_FOUND));
         option.changeStock(stockQty);
+    }
+
+    /**
+     * 상품 소프트삭제 (C-T5, 노출 API). 항상 use_yn='N' + display_yn='N'로 처리하고
+     * 옵션·이미지도 동반 소프트삭제한다. 주문 이력 유무와 무관히 성공(스냅샷은 dat_order_item에 보존).
+     * 단일 트랜잭션(조회+상태변경).
+     */
+    @Transactional
+    public void deleteProduct(Long productSeq) {
+        Product product = productRepository.findById(productSeq)
+                .filter(p -> USE_Y.equals(p.getUseYn()))
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+        product.softDelete();
+        productOptionRepository.findActiveByProductSeq(productSeq).forEach(ProductOption::softDelete);
+        productImageRepository.findActiveByProductSeq(productSeq).forEach(ProductImage::softDelete);
+    }
+
+    /**
+     * 상품 하드삭제 (C-T5, 미노출 — 향후 일괄정리/관리 배치 경로용). 주문 이력(dat_order_item 참조)이
+     * 있으면 스냅샷/이력 보존을 위해 물리삭제를 금지한다 → PRODUCT_HAS_ORDERS. 단일 트랜잭션(검사+삭제).
+     *
+     * <p><b>주의</b>: 현재 어떤 컨트롤러도 이 메서드를 호출하지 않는다(노출 API는 소프트삭제뿐).
+     * 배치/일괄정리 경로가 생기면 활성화되므로 방어적으로 유지한다(미사용 오인 삭제 금지).
+     * M-T6 {@code assertNotLastAdmin} 선례와 동일한 방어 가드다. 단위검증: AdminProductCommandIntegrationTest.
+     */
+    @Transactional
+    public void hardDeleteProduct(Long productSeq) {
+        Product product = productRepository.findById(productSeq)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+        if (orderItemRepository.existsByProductSeq(productSeq)) {
+            throw new BusinessException(ErrorCode.PRODUCT_HAS_ORDERS);
+        }
+        mapProductLabelRepository.deleteByProductSeq(productSeq);
+        productOptionRepository.deleteByProductSeq(productSeq);
+        productImageRepository.deleteByProductSeq(productSeq);
+        productRepository.delete(product);
     }
 
     // 등록/수정 경로: blank→기본(ON_SALE), 그 외는 화이트리스트 검증(C-T4 통합 — 등록으로 새는 경로 차단).
