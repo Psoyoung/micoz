@@ -1,5 +1,7 @@
 package com.micoz.order.calculator;
 
+import com.micoz.common.exception.BusinessException;
+import com.micoz.common.response.ErrorCode;
 import com.micoz.settings.entity.ShippingSetting;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -11,6 +13,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class OrderAmountCalculatorTest {
 
@@ -86,5 +89,40 @@ class OrderAmountCalculatorTest {
                 List.of(new OrderItemInput(1L, 1L, new BigDecimal("100000"), 1)),
                 setting, false, BigDecimal.ZERO, 0, new BigDecimal("5"));
         assertThat(a.getPointToEarn()).isEqualTo(5000);
+    }
+
+    // ---- O-T1 (D2-ii): 배송 3필드 null 시 fail-fast (nullToZero로 삼키지 않음) ----
+
+    @Test
+    @DisplayName("fail-fast: shippingFee=null → SHIPPING_SETTING_INVALID")
+    void nullShippingFeeFailsFast() throws Exception {
+        setField("shippingFee", null);
+        assertThatThrownBy(() -> calc.calculate(
+                List.of(new OrderItemInput(1L, 1L, new BigDecimal("28000"), 1)),
+                setting, false, BigDecimal.ZERO, 0, BigDecimal.ZERO))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.SHIPPING_SETTING_INVALID);
+    }
+
+    @Test
+    @DisplayName("fail-fast: freeShippingMin=null → SHIPPING_SETTING_INVALID")
+    void nullFreeShippingMinFailsFast() throws Exception {
+        setField("freeShippingMin", null);
+        assertThatThrownBy(() -> calc.calculate(
+                List.of(new OrderItemInput(1L, 1L, new BigDecimal("28000"), 1)),
+                setting, false, BigDecimal.ZERO, 0, BigDecimal.ZERO))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.SHIPPING_SETTING_INVALID);
+    }
+
+    @Test
+    @DisplayName("fail-fast: remoteExtraFee=null → SHIPPING_SETTING_INVALID")
+    void nullRemoteExtraFeeFailsFast() throws Exception {
+        setField("remoteExtraFee", null);
+        assertThatThrownBy(() -> calc.calculate(
+                List.of(new OrderItemInput(1L, 1L, new BigDecimal("28000"), 1)),
+                setting, false, BigDecimal.ZERO, 0, BigDecimal.ZERO))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.SHIPPING_SETTING_INVALID);
     }
 }

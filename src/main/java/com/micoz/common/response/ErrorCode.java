@@ -92,7 +92,11 @@ public enum ErrorCode {
 
     // SETTINGS — Shipping (M7 S-T2)
     // 단일행 부재는 정상 경로가 아닌 인프라 이상(시드 붕괴). 조용한 upsert 대신 명시적 실패(S-Q1=A).
-    SHIPPING_SETTING_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "배송 설정이 초기화되지 않았습니다.");
+    SHIPPING_SETTING_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "배송 설정이 초기화되지 않았습니다."),
+
+    // ORDER OPS — Shipping 무결성 (M7 O-T1, D2-ii)
+    // 설정 행은 있으나 금액 필드가 null(NOT_FOUND=부재와 의미 분리). V9 NOT NULL로 사실상 도달 불가한 계산기 fail-fast 심층방어.
+    SHIPPING_SETTING_INVALID(HttpStatus.INTERNAL_SERVER_ERROR, "배송 설정 금액이 유효하지 않습니다.");
 
     private final HttpStatus httpStatus;
     private final String defaultMessage;

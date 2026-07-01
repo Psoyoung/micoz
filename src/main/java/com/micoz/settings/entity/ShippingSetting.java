@@ -27,13 +27,13 @@ public class ShippingSetting extends BaseEntity {
     @Column(name = "shipping_name", length = 100)
     private String shippingName;
 
-    @Column(name = "shipping_fee", precision = 15, scale = 2)
+    @Column(name = "shipping_fee", precision = 15, scale = 2, nullable = false)
     private BigDecimal shippingFee;
 
-    @Column(name = "free_shipping_min", precision = 15, scale = 2)
+    @Column(name = "free_shipping_min", precision = 15, scale = 2, nullable = false)
     private BigDecimal freeShippingMin;
 
-    @Column(name = "remote_extra_fee", precision = 15, scale = 2)
+    @Column(name = "remote_extra_fee", precision = 15, scale = 2, nullable = false)
     private BigDecimal remoteExtraFee;
 
     @Column(name = "shipping_notice", length = 500)
