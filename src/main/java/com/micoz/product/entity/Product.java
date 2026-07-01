@@ -96,4 +96,9 @@ public class Product extends BaseEntity {
         this.usageInfo = usageInfo;
         this.displayYn = displayYn;
     }
+
+    /** 판매상태 변경 (C-T4). 허용값 검증은 호출 측(화이트리스트). */
+    public void changeStatus(String productStatus) {
+        this.productStatus = productStatus;
+    }
 }

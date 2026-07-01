@@ -76,4 +76,9 @@ public class ProductOption extends BaseEntity {
     public void softDelete() {
         this.useYn = "N";
     }
+
+    /** 재고 절대값 설정 (C-T4). 음수 방지는 호출 측. */
+    public void changeStock(int stockQty) {
+        this.stockQty = stockQty;
+    }
 }

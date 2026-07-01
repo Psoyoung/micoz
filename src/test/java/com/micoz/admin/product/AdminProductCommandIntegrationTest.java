@@ -279,7 +279,107 @@ class AdminProductCommandIntegrationTest extends IntegrationTestSupport {
         assertThat(parse(resp.getBody()).path("code").asText()).isEqualTo("PRODUCT_NOT_FOUND");
     }
 
+    // ───────────────────── C-T4 재고·판매상태 ─────────────────────
+    @Test
+    @DisplayName("판매상태 변경(유효) → 200 + DB 반영")
+    void changeStatusValid() {
+        long seq = createProduct("CT-ST-" + sfx, "상품", 1000, catA);
+        ResponseEntity<String> resp = patchJson(PRODUCTS + "/" + seq + "/status", adminToken,
+                Map.of("status", "SOLD_OUT"));
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(statusOf(seq)).isEqualTo("SOLD_OUT");
+    }
+
+    @Test
+    @DisplayName("판매상태 변경(허용 외) → 400 PRODUCT_INVALID_STATUS")
+    void changeStatusInvalid() {
+        long seq = createProduct("CT-STBAD-" + sfx, "상품", 1000, catA);
+        ResponseEntity<String> resp = patchJson(PRODUCTS + "/" + seq + "/status", adminToken,
+                Map.of("status", "NONSENSE"));
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(parse(resp.getBody()).path("code").asText()).isEqualTo("PRODUCT_INVALID_STATUS");
+    }
+
+    @Test
+    @DisplayName("판매상태 변경 대상 미존재 → 404 PRODUCT_NOT_FOUND")
+    void changeStatusNotFound() {
+        ResponseEntity<String> resp = patchJson(PRODUCTS + "/99999999/status", adminToken,
+                Map.of("status", "ON_SALE"));
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(parse(resp.getBody()).path("code").asText()).isEqualTo("PRODUCT_NOT_FOUND");
+    }
+
+    @Test
+    @DisplayName("옵션 재고 설정(절대값) → 200 + DB 반영")
+    void changeStockValid() {
+        long[] ps = createProductWithOption("CT-STK-" + sfx, "opt");
+        ResponseEntity<String> resp = patchJson(
+                PRODUCTS + "/" + ps[0] + "/options/" + ps[1] + "/stock", adminToken, Map.of("stockQty", 77));
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(stockOf(ps[1])).isEqualTo(77);
+    }
+
+    @Test
+    @DisplayName("옵션 재고 음수 → 400 COMMON_VALIDATION_ERROR")
+    void changeStockNegative() {
+        long[] ps = createProductWithOption("CT-STKNEG-" + sfx, "opt");
+        ResponseEntity<String> resp = patchJson(
+                PRODUCTS + "/" + ps[0] + "/options/" + ps[1] + "/stock", adminToken, Map.of("stockQty", -5));
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(parse(resp.getBody()).path("code").asText()).isEqualTo("COMMON_VALIDATION_ERROR");
+    }
+
+    @Test
+    @DisplayName("타 상품 옵션에 재고 설정 → 404 PRODUCT_OPTION_NOT_FOUND")
+    void changeStockOptionNotBelong() {
+        long[] ps = createProductWithOption("CT-STKA-" + sfx, "opt");
+        long other = createProduct("CT-STKB-" + sfx, "다른상품", 1000, catA);
+        ResponseEntity<String> resp = patchJson(
+                PRODUCTS + "/" + other + "/options/" + ps[1] + "/stock", adminToken, Map.of("stockQty", 10));
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(parse(resp.getBody()).path("code").asText()).isEqualTo("PRODUCT_OPTION_NOT_FOUND");
+    }
+
+    @Test
+    @DisplayName("상태 검증 통합(C-T4) — 등록 경로의 허용 외 status도 400 PRODUCT_INVALID_STATUS")
+    void createInvalidStatusRejected() {
+        Map<String, Object> body = baseCreate("CT-CRST-" + sfx, "상품", 1000);
+        body.put("productStatus", "BOGUS");
+        ResponseEntity<String> resp = postJson(PRODUCTS, adminToken, body);
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(parse(resp.getBody()).path("code").asText()).isEqualTo("PRODUCT_INVALID_STATUS");
+    }
+
+    @Test
+    @DisplayName("상태 검증 통합(C-T4) — 수정 경로의 허용 외 status도 400 PRODUCT_INVALID_STATUS")
+    void updateInvalidStatusRejected() {
+        long seq = createProduct("CT-UPST-" + sfx, "상품", 1000, catA);
+        Map<String, Object> upd = baseUpdate("CT-UPST-" + sfx, "상품", 1000);
+        upd.put("productStatus", "BOGUS");
+        ResponseEntity<String> resp = putJson(PRODUCTS + "/" + seq, adminToken, upd);
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(parse(resp.getBody()).path("code").asText()).isEqualTo("PRODUCT_INVALID_STATUS");
+    }
+
     // ─────────────────────────── helpers ───────────────────────────
+    private long[] createProductWithOption(String code, String optName) {
+        long seq = createProduct(code, "상품", 1000, catA);
+        Map<String, Object> upd = baseUpdate(code, "상품", 1000);
+        upd.put("options", List.of(option(null, optName, 1000, 5, 1)));
+        assertThat(putJson(PRODUCTS + "/" + seq, adminToken, upd).getStatusCode()).isEqualTo(HttpStatus.OK);
+        return new long[]{seq, optionSeqByName(seq, optName)};
+    }
+
+    private String statusOf(long productSeq) {
+        return jdbcTemplate.queryForObject(
+                "SELECT product_status FROM mst_product WHERE product_seq = ?", String.class, productSeq);
+    }
+
+    private int stockOf(long optionSeq) {
+        return jdbcTemplate.queryForObject(
+                "SELECT stock_qty FROM mst_product_option WHERE option_seq = ?", Integer.class, optionSeq);
+    }
+
     private ResponseEntity<String> putJson(String path, String token, Object body) {
         return rest.exchange(baseUrl() + path, org.springframework.http.HttpMethod.PUT,
                 new org.springframework.http.HttpEntity<>(body, authHeaders(token)), String.class);

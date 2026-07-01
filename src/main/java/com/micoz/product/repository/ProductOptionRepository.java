@@ -16,6 +16,10 @@ public interface ProductOptionRepository extends JpaRepository<ProductOption, Lo
         return findAllByProductSeqAndUseYnOrderBySortOrderAsc(productSeq, "Y");
     }
 
+    /** 옵션이 해당 상품 소속·활성인지 확인(C-T4 재고 설정). */
+    java.util.Optional<ProductOption> findByOptionSeqAndProductSeqAndUseYn(
+            Long optionSeq, Long productSeq, String useYn);
+
     // ── 관리자 (C-T2) ──────────────────────────────────────────
     /** 상품별 활성 옵션 재고 합을 1회 집계 — 목록 totalStock 매핑 시 N+1 방지. */
     @Query("select o.productSeq as productSeq, coalesce(sum(o.stockQty), 0) as totalStock "

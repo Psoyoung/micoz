@@ -56,6 +56,9 @@ public class AdminProductService {
     private static final String USE_Y = "Y";
     private static final String DEFAULT_STATUS = "ON_SALE";
 
+    /** 허용 판매상태 (C-T4). 등록·수정·상태변경 모든 경로가 동일 화이트리스트를 태운다. */
+    private static final Set<String> ALLOWED_STATUSES = Set.of("ON_SALE", "LOW_STOCK", "SOLD_OUT", "STOPPED");
+
     /** 정렬 화이트리스트: API 정렬키 → 엔티티 프로퍼티. 미허용 컬럼 정렬은 400. */
     private static final Map<String, String> SORT_WHITELIST = Map.of(
             "productSeq", "productSeq",
@@ -369,8 +372,50 @@ public class AdminProductService {
         }
     }
 
+    /**
+     * 판매상태 변경 (C-T4). 화이트리스트 외면 PRODUCT_INVALID_STATUS.
+     */
+    @Transactional
+    public void changeStatus(Long productSeq, String status) {
+        Product product = productRepository.findById(productSeq)
+                .filter(p -> USE_Y.equals(p.getUseYn()))
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+        product.changeStatus(validateStatus(status));
+    }
+
+    /**
+     * 옵션 재고 설정 (C-T4, 절대값). 음수면 COMMON_VALIDATION_ERROR,
+     * 옵션이 해당 상품 소속·활성이 아니면 PRODUCT_OPTION_NOT_FOUND.
+     */
+    @Transactional
+    public void changeStock(Long productSeq, Long optionSeq, Integer stockQty) {
+        if (stockQty == null || stockQty < 0) {
+            throw new BusinessException(ErrorCode.COMMON_VALIDATION_ERROR);
+        }
+        productRepository.findById(productSeq)
+                .filter(p -> USE_Y.equals(p.getUseYn()))
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+        ProductOption option = productOptionRepository
+                .findByOptionSeqAndProductSeqAndUseYn(optionSeq, productSeq, USE_Y)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_OPTION_NOT_FOUND));
+        option.changeStock(stockQty);
+    }
+
+    // 등록/수정 경로: blank→기본(ON_SALE), 그 외는 화이트리스트 검증(C-T4 통합 — 등록으로 새는 경로 차단).
     private String resolveStatus(String status) {
-        return (status == null || status.isBlank()) ? DEFAULT_STATUS : status.trim().toUpperCase();
+        if (status == null || status.isBlank()) {
+            return DEFAULT_STATUS;
+        }
+        return validateStatus(status);
+    }
+
+    // 상태 화이트리스트 검증. 통과 시 정규화(대문자) 반환, 외면 PRODUCT_INVALID_STATUS.
+    private String validateStatus(String status) {
+        String normalized = status == null ? "" : status.trim().toUpperCase();
+        if (!ALLOWED_STATUSES.contains(normalized)) {
+            throw new BusinessException(ErrorCode.PRODUCT_INVALID_STATUS);
+        }
+        return normalized;
     }
 
     private String normalizeYn(String value) {

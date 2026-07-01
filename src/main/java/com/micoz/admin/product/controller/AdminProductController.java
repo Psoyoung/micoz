@@ -6,6 +6,8 @@ import com.micoz.admin.product.dto.CreateProductRequest;
 import com.micoz.admin.product.dto.ProductCreatedResponse;
 import com.micoz.admin.product.dto.ProductSearchCondition;
 import com.micoz.admin.product.dto.UpdateProductRequest;
+import com.micoz.admin.product.dto.UpdateProductStatusRequest;
+import com.micoz.admin.product.dto.UpdateStockRequest;
 import com.micoz.admin.product.service.AdminProductService;
 import com.micoz.common.response.ApiResponse;
 import com.micoz.common.response.PageResponse;
@@ -17,6 +19,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -58,6 +61,23 @@ public class AdminProductController {
             @PathVariable Long productSeq,
             @Valid @RequestBody UpdateProductRequest request) {
         adminProductService.updateProduct(productSeq, request);
+        return ApiResponse.success();
+    }
+
+    @PatchMapping("/{productSeq}/status")
+    public ApiResponse<Void> changeStatus(
+            @PathVariable Long productSeq,
+            @Valid @RequestBody UpdateProductStatusRequest request) {
+        adminProductService.changeStatus(productSeq, request.getStatus());
+        return ApiResponse.success();
+    }
+
+    @PatchMapping("/{productSeq}/options/{optionSeq}/stock")
+    public ApiResponse<Void> changeStock(
+            @PathVariable Long productSeq,
+            @PathVariable Long optionSeq,
+            @Valid @RequestBody UpdateStockRequest request) {
+        adminProductService.changeStock(productSeq, optionSeq, request.getStockQty());
         return ApiResponse.success();
     }
 }
