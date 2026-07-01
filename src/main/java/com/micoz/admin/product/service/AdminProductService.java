@@ -5,7 +5,10 @@ import com.micoz.admin.product.dto.AdminProductDetailResponse.AdminImageDto;
 import com.micoz.admin.product.dto.AdminProductDetailResponse.AdminLabelDto;
 import com.micoz.admin.product.dto.AdminProductDetailResponse.AdminOptionDto;
 import com.micoz.admin.product.dto.AdminProductListItem;
+import com.micoz.admin.product.dto.CreateProductRequest;
+import com.micoz.admin.product.dto.ProductCreatedResponse;
 import com.micoz.admin.product.dto.ProductSearchCondition;
+import com.micoz.admin.product.dto.UpdateProductRequest;
 import com.micoz.admin.product.spec.ProductSpecs;
 import com.micoz.category.entity.Category;
 import com.micoz.category.repository.CategoryRepository;
@@ -14,7 +17,9 @@ import com.micoz.common.response.ErrorCode;
 import com.micoz.common.response.PageResponse;
 import com.micoz.product.entity.MapProductLabel;
 import com.micoz.product.entity.Product;
+import com.micoz.product.entity.ProductImage;
 import com.micoz.product.entity.ProductLabel;
+import com.micoz.product.entity.ProductOption;
 import com.micoz.product.repository.MapProductLabelRepository;
 import com.micoz.product.repository.ProductImageRepository;
 import com.micoz.product.repository.ProductLabelRepository;
@@ -33,8 +38,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -46,6 +54,7 @@ import java.util.stream.Collectors;
 public class AdminProductService {
 
     private static final String USE_Y = "Y";
+    private static final String DEFAULT_STATUS = "ON_SALE";
 
     /** 정렬 화이트리스트: API 정렬키 → 엔티티 프로퍼티. 미허용 컬럼 정렬은 400. */
     private static final Map<String, String> SORT_WHITELIST = Map.of(
@@ -158,6 +167,214 @@ public class AdminProductService {
                 .createdDate(product.getIDate())
                 .lastModifiedDate(product.getUDate())
                 .build();
+    }
+
+    /**
+     * 상품 등록 (C-T3). 옵션·이미지·라벨을 한 요청에 함께 등록 — 단일 트랜잭션 원자성
+     * (자식 일부 실패 시 상품까지 전체 롤백). 옵션/이미지/라벨 0개 허용(C-Q4).
+     */
+    @Transactional
+    public ProductCreatedResponse createProduct(CreateProductRequest req) {
+        String code = req.getProductCode().trim();
+        if (productRepository.existsByProductCodeAndUseYn(code, USE_Y)) {
+            throw new BusinessException(ErrorCode.PRODUCT_DUPLICATED_CODE);
+        }
+        validateCategoryActive(req.getCategorySeq());
+        validateLabelsActive(req.getLabelSeqs());
+
+        Product product = Product.builder()
+                .productCode(code)
+                .productName(req.getProductName().trim())
+                .productStatus(resolveStatus(req.getProductStatus()))
+                .categorySeq(req.getCategorySeq())
+                .basePrice(req.getBasePrice())
+                .shortDesc(req.getShortDesc())
+                .detailDesc(req.getDetailDesc())
+                .ingredientInfo(req.getIngredientInfo())
+                .usageInfo(req.getUsageInfo())
+                .displayYn(normalizeYn(req.getDisplayYn()))
+                .useYn(USE_Y)
+                .build();
+        Long productSeq = productRepository.save(product).getProductSeq();
+
+        if (req.getOptions() != null) {
+            for (CreateProductRequest.OptionInput o : req.getOptions()) {
+                productOptionRepository.save(ProductOption.builder()
+                        .productSeq(productSeq)
+                        .optionName(o.getOptionName().trim())
+                        .finalPrice(o.getFinalPrice())
+                        .stockQty(o.getStockQty())
+                        .sortOrder(o.getSortOrder())
+                        .build());
+            }
+        }
+        if (req.getImages() != null) {
+            for (CreateProductRequest.ImageInput i : req.getImages()) {
+                productImageRepository.save(ProductImage.builder()
+                        .productSeq(productSeq)
+                        .imageType(i.getImageType().trim())
+                        .imageUrl(i.getImageUrl())
+                        .imageAlt(i.getImageAlt())
+                        .sortOrder(i.getSortOrder())
+                        .build());
+            }
+        }
+        insertLabels(productSeq, req.getLabelSeqs());
+        return new ProductCreatedResponse(productSeq, code);
+    }
+
+    /**
+     * 상품 수정 (C-T3). 단일 트랜잭션. 본문 갱신 + 자식 동기화(C-Q4):
+     * 옵션/이미지 seq upsert(빠진 기존은 소프트삭제), 라벨 차집합 교체.
+     */
+    @Transactional
+    public void updateProduct(Long productSeq, UpdateProductRequest req) {
+        Product product = productRepository.findById(productSeq)
+                .filter(p -> USE_Y.equals(p.getUseYn()))
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+
+        String code = req.getProductCode().trim();
+        if (!code.equals(product.getProductCode())
+                && productRepository.existsByProductCodeAndUseYnAndProductSeqNot(code, USE_Y, productSeq)) {
+            throw new BusinessException(ErrorCode.PRODUCT_DUPLICATED_CODE);
+        }
+        validateCategoryActive(req.getCategorySeq());
+        validateLabelsActive(req.getLabelSeqs());
+
+        product.updateInfo(code, req.getProductName().trim(), resolveStatus(req.getProductStatus()),
+                req.getCategorySeq(), req.getBasePrice(), req.getShortDesc(), req.getDetailDesc(),
+                req.getIngredientInfo(), req.getUsageInfo(), normalizeYn(req.getDisplayYn()));
+
+        syncOptions(productSeq, req.getOptions());
+        syncImages(productSeq, req.getImages());
+        syncLabels(productSeq, req.getLabelSeqs());
+    }
+
+    // 카테고리 활성 검증(선택 필드). 지정됐는데 활성 아니면 CATEGORY_NOT_FOUND.
+    private void validateCategoryActive(Long categorySeq) {
+        if (categorySeq == null) {
+            return;
+        }
+        categoryRepository.findByCategorySeqAndUseYn(categorySeq, USE_Y)
+                .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
+    }
+
+    // 라벨 전부 활성 검증. 하나라도 미존재/비활성이면 LABEL_NOT_FOUND.
+    private void validateLabelsActive(List<Long> labelSeqs) {
+        if (labelSeqs == null || labelSeqs.isEmpty()) {
+            return;
+        }
+        Set<Long> distinct = new LinkedHashSet<>(labelSeqs);
+        long activeCount = productLabelRepository.findAllById(distinct).stream()
+                .filter(l -> USE_Y.equals(l.getUseYn()))
+                .count();
+        if (activeCount != distinct.size()) {
+            throw new BusinessException(ErrorCode.LABEL_NOT_FOUND);
+        }
+    }
+
+    private void insertLabels(Long productSeq, List<Long> labelSeqs) {
+        if (labelSeqs == null) {
+            return;
+        }
+        for (Long labelSeq : new LinkedHashSet<>(labelSeqs)) {
+            mapProductLabelRepository.save(new MapProductLabel(productSeq, labelSeq));
+        }
+    }
+
+    // 옵션 seq upsert: seq 있으면 수정(미존재 시 PRODUCT_OPTION_NOT_FOUND), 없으면 신규,
+    // 요청에서 빠진 기존 활성 옵션은 소프트삭제.
+    private void syncOptions(Long productSeq, List<UpdateProductRequest.OptionUpsert> inputs) {
+        Map<Long, ProductOption> existing = productOptionRepository.findActiveByProductSeq(productSeq).stream()
+                .collect(Collectors.toMap(ProductOption::getOptionSeq, o -> o));
+        Set<Long> kept = new HashSet<>();
+        if (inputs != null) {
+            for (UpdateProductRequest.OptionUpsert in : inputs) {
+                if (in.getOptionSeq() != null) {
+                    ProductOption opt = existing.get(in.getOptionSeq());
+                    if (opt == null) {
+                        throw new BusinessException(ErrorCode.PRODUCT_OPTION_NOT_FOUND);
+                    }
+                    opt.updateInfo(in.getOptionName().trim(), in.getFinalPrice(), in.getStockQty(), in.getSortOrder());
+                    kept.add(in.getOptionSeq());
+                } else {
+                    productOptionRepository.save(ProductOption.builder()
+                            .productSeq(productSeq)
+                            .optionName(in.getOptionName().trim())
+                            .finalPrice(in.getFinalPrice())
+                            .stockQty(in.getStockQty())
+                            .sortOrder(in.getSortOrder())
+                            .build());
+                }
+            }
+        }
+        for (ProductOption opt : existing.values()) {
+            if (!kept.contains(opt.getOptionSeq())) {
+                opt.softDelete();
+            }
+        }
+    }
+
+    // 이미지 seq upsert(옵션과 동일 규칙). 미존재 imageSeq는 PRODUCT_IMAGE_NOT_FOUND(404)
+    // — 옵션(PRODUCT_OPTION_NOT_FOUND)과 대칭.
+    private void syncImages(Long productSeq, List<UpdateProductRequest.ImageUpsert> inputs) {
+        Map<Long, ProductImage> existing = productImageRepository.findActiveByProductSeq(productSeq).stream()
+                .collect(Collectors.toMap(ProductImage::getImageSeq, i -> i));
+        Set<Long> kept = new HashSet<>();
+        if (inputs != null) {
+            for (UpdateProductRequest.ImageUpsert in : inputs) {
+                if (in.getImageSeq() != null) {
+                    ProductImage img = existing.get(in.getImageSeq());
+                    if (img == null) {
+                        throw new BusinessException(ErrorCode.PRODUCT_IMAGE_NOT_FOUND);
+                    }
+                    img.updateInfo(in.getImageType().trim(), in.getImageUrl(), in.getImageAlt(), in.getSortOrder());
+                    kept.add(in.getImageSeq());
+                } else {
+                    productImageRepository.save(ProductImage.builder()
+                            .productSeq(productSeq)
+                            .imageType(in.getImageType().trim())
+                            .imageUrl(in.getImageUrl())
+                            .imageAlt(in.getImageAlt())
+                            .sortOrder(in.getSortOrder())
+                            .build());
+                }
+            }
+        }
+        for (ProductImage img : existing.values()) {
+            if (!kept.contains(img.getImageSeq())) {
+                img.softDelete();
+            }
+        }
+    }
+
+    // 라벨 차집합 교체(C-Q4): 빠진 매핑만 삭제, 새 매핑만 삽입, 변경 없는 건 미변경.
+    private void syncLabels(Long productSeq, List<Long> requestedList) {
+        Set<Long> current = mapProductLabelRepository.findAllByProductSeq(productSeq).stream()
+                .map(MapProductLabel::getLabelSeq)
+                .collect(Collectors.toCollection(HashSet::new));
+        Set<Long> requested = requestedList == null ? Set.of() : new LinkedHashSet<>(requestedList);
+
+        for (Long seq : requested) {
+            if (!current.contains(seq)) {
+                mapProductLabelRepository.save(new MapProductLabel(productSeq, seq));
+            }
+        }
+        List<MapProductLabel.MapProductLabelId> toRemove = current.stream()
+                .filter(seq -> !requested.contains(seq))
+                .map(seq -> new MapProductLabel.MapProductLabelId(productSeq, seq))
+                .toList();
+        if (!toRemove.isEmpty()) {
+            mapProductLabelRepository.deleteAllById(toRemove);
+        }
+    }
+
+    private String resolveStatus(String status) {
+        return (status == null || status.isBlank()) ? DEFAULT_STATUS : status.trim().toUpperCase();
+    }
+
+    private String normalizeYn(String value) {
+        return "N".equalsIgnoreCase(value == null ? null : value.trim()) ? "N" : "Y";
     }
 
     /** 카테고리명 일괄 조회(목록의 categorySeq 집합 → seq→name). N+1 방지. */

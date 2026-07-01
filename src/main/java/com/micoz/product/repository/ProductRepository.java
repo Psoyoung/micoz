@@ -18,6 +18,13 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     /** 카테고리 삭제 가드: 해당 카테고리의 활성 소속 상품 수. */
     long countByCategorySeqAndUseYn(Long categorySeq, String useYn);
 
+    // ── 관리자 (C-T3) ──────────────────────────────────────────
+    /** 상품 코드 활성 중복(등록). */
+    boolean existsByProductCodeAndUseYn(String productCode, String useYn);
+
+    /** 상품 코드 활성 중복(수정, 본인 제외). */
+    boolean existsByProductCodeAndUseYnAndProductSeqNot(String productCode, String useYn, Long productSeq);
+
     /** 카테고리 트리의 소속 상품 수를 1회 집계(category_seq별) — 목록 매핑 시 N+1 방지. */
     @Query("select p.categorySeq as categorySeq, count(p) as count from Product p "
             + "where p.useYn = 'Y' and p.categorySeq is not null group by p.categorySeq")

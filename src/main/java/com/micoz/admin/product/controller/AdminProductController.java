@@ -2,10 +2,14 @@ package com.micoz.admin.product.controller;
 
 import com.micoz.admin.product.dto.AdminProductDetailResponse;
 import com.micoz.admin.product.dto.AdminProductListItem;
+import com.micoz.admin.product.dto.CreateProductRequest;
+import com.micoz.admin.product.dto.ProductCreatedResponse;
 import com.micoz.admin.product.dto.ProductSearchCondition;
+import com.micoz.admin.product.dto.UpdateProductRequest;
 import com.micoz.admin.product.service.AdminProductService;
 import com.micoz.common.response.ApiResponse;
 import com.micoz.common.response.PageResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -14,6 +18,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -39,5 +46,18 @@ public class AdminProductController {
     @GetMapping("/{productSeq}")
     public ApiResponse<AdminProductDetailResponse> detail(@PathVariable Long productSeq) {
         return ApiResponse.success(adminProductService.getDetail(productSeq));
+    }
+
+    @PostMapping
+    public ApiResponse<ProductCreatedResponse> create(@Valid @RequestBody CreateProductRequest request) {
+        return ApiResponse.success(adminProductService.createProduct(request));
+    }
+
+    @PutMapping("/{productSeq}")
+    public ApiResponse<Void> update(
+            @PathVariable Long productSeq,
+            @Valid @RequestBody UpdateProductRequest request) {
+        adminProductService.updateProduct(productSeq, request);
+        return ApiResponse.success();
     }
 }

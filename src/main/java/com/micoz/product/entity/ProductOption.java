@@ -63,4 +63,17 @@ public class ProductOption extends BaseEntity {
         this.stockQty = stockQty - quantity;
         return true;
     }
+
+    /** 옵션 수정 (C-T3, seq upsert). */
+    public void updateInfo(String optionName, BigDecimal finalPrice, Integer stockQty, Integer sortOrder) {
+        this.optionName = optionName;
+        this.finalPrice = finalPrice;
+        this.stockQty = stockQty != null ? stockQty : 0;
+        this.sortOrder = sortOrder != null ? sortOrder : 0;
+    }
+
+    /** 소프트삭제 (C-T3 수정 시 미포함 옵션 / C-T5 상품 삭제 동반). */
+    public void softDelete() {
+        this.useYn = "N";
+    }
 }

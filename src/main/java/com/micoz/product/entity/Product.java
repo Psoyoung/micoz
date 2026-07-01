@@ -79,4 +79,21 @@ public class Product extends BaseEntity {
         this.displayYn = displayYn != null ? displayYn : "Y";
         this.useYn = useYn != null ? useYn : "Y";
     }
+
+    /** 상품 본문 수정 (C-T3, 전체 교체). 자식(옵션·이미지·라벨)은 서비스에서 별도 동기화. */
+    public void updateInfo(String productCode, String productName, String productStatus,
+                           Long categorySeq, BigDecimal basePrice, String shortDesc,
+                           String detailDesc, String ingredientInfo, String usageInfo,
+                           String displayYn) {
+        this.productCode = productCode;
+        this.productName = productName;
+        this.productStatus = productStatus;
+        this.categorySeq = categorySeq;
+        this.basePrice = basePrice;
+        this.shortDesc = shortDesc;
+        this.detailDesc = detailDesc;
+        this.ingredientInfo = ingredientInfo;
+        this.usageInfo = usageInfo;
+        this.displayYn = displayYn;
+    }
 }

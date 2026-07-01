@@ -55,4 +55,17 @@ public class ProductImage extends BaseEntity {
         this.sortOrder = sortOrder != null ? sortOrder : 0;
         this.useYn = useYn != null ? useYn : "Y";
     }
+
+    /** 이미지 수정 (C-T3, seq upsert). */
+    public void updateInfo(String imageType, String imageUrl, String imageAlt, Integer sortOrder) {
+        this.imageType = imageType;
+        this.imageUrl = imageUrl;
+        this.imageAlt = imageAlt;
+        this.sortOrder = sortOrder != null ? sortOrder : 0;
+    }
+
+    /** 소프트삭제 (C-T3 수정 시 미포함 이미지 / C-T5 상품 삭제 동반). */
+    public void softDelete() {
+        this.useYn = "N";
+    }
 }

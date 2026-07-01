@@ -77,7 +77,13 @@ public enum ErrorCode {
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "카테고리를 찾을 수 없습니다."),
     CATEGORY_HAS_CHILDREN(HttpStatus.CONFLICT, "하위 카테고리 또는 소속 상품이 있어 삭제할 수 없습니다."),
     CATEGORY_DUPLICATED_SLUG(HttpStatus.CONFLICT, "이미 사용 중인 URL 슬러그입니다."),
-    CATEGORY_INVALID_PARENT(HttpStatus.BAD_REQUEST, "상위 카테고리가 올바르지 않습니다.");
+    CATEGORY_INVALID_PARENT(HttpStatus.BAD_REQUEST, "상위 카테고리가 올바르지 않습니다."),
+
+    // CATALOG — Product (M7 C-T3)
+    PRODUCT_DUPLICATED_CODE(HttpStatus.CONFLICT, "이미 사용 중인 상품 코드입니다."),
+    PRODUCT_OPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "상품 옵션을 찾을 수 없습니다."),
+    PRODUCT_IMAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "상품 이미지를 찾을 수 없습니다."),
+    LABEL_NOT_FOUND(HttpStatus.NOT_FOUND, "라벨을 찾을 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String defaultMessage;
