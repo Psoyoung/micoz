@@ -38,4 +38,19 @@ public class ShippingSetting extends BaseEntity {
 
     @Column(name = "shipping_notice", length = 500)
     private String shippingNotice;
+
+    /**
+     * 설정 수정 (S-T2). 부분 수정 — null 필드는 미변경(기존값 보존).
+     * 세 금액 필드(shippingFee/freeShippingMin/remoteExtraFee)는 제공 시 검증된 비-null만 기록하고
+     * 미제공 시 기존 비-null을 보존하므로 영구히 비-null 유지된다.
+     * (OrderAmountCalculator가 이 세 필드를 null-guard 없이 사용 — 계약상 null 진입 차단이 필수)
+     */
+    public void updateSettings(String shippingName, BigDecimal shippingFee, BigDecimal freeShippingMin,
+                               BigDecimal remoteExtraFee, String shippingNotice) {
+        if (shippingName != null) this.shippingName = shippingName;
+        if (shippingFee != null) this.shippingFee = shippingFee;
+        if (freeShippingMin != null) this.freeShippingMin = freeShippingMin;
+        if (remoteExtraFee != null) this.remoteExtraFee = remoteExtraFee;
+        if (shippingNotice != null) this.shippingNotice = shippingNotice;
+    }
 }

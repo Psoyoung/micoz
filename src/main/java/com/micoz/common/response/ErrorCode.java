@@ -88,7 +88,11 @@ public enum ErrorCode {
     PRODUCT_HAS_ORDERS(HttpStatus.CONFLICT, "주문 이력이 있는 상품은 하드 삭제할 수 없습니다."),
 
     // SETTINGS — Banner (M7 S-T1)
-    BANNER_NOT_FOUND(HttpStatus.NOT_FOUND, "배너를 찾을 수 없습니다.");
+    BANNER_NOT_FOUND(HttpStatus.NOT_FOUND, "배너를 찾을 수 없습니다."),
+
+    // SETTINGS — Shipping (M7 S-T2)
+    // 단일행 부재는 정상 경로가 아닌 인프라 이상(시드 붕괴). 조용한 upsert 대신 명시적 실패(S-Q1=A).
+    SHIPPING_SETTING_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "배송 설정이 초기화되지 않았습니다.");
 
     private final HttpStatus httpStatus;
     private final String defaultMessage;
