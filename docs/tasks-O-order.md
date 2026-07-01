@@ -76,7 +76,7 @@ AdminOrderPaymentInfo     { paymentType, paymentStatus, paidAmount, cardCompany,
 
 | 코드 | HTTP | 메시지 | 용도 |
 |---|---|---|---|
-| `ORDER_TRANSITION_INVALID` | 409 | 허용되지 않은 주문 상태 전이입니다. | O-T2 전이표 위반(from→to 비허용). 전이서비스 단일 지점에서만 throw. 기존 `ORDER_INVALID_STATUS`(비-PENDING 결제 시도)와 **의미 분리**(Q-E) |
+| `ORDER_TRANSITION_INVALID` | 409 | 허용되지 않은 주문 상태 전이입니다. | O-T2 전이표 위반(from→to 비허용). **엔티티 `Order.changeStatus` 단일 choke point**에서만 throw(어떤 호출자도 우회 불가). 기존 `ORDER_INVALID_STATUS`(비-PENDING 결제 시도)와 **의미 분리**(Q-E) |
 | `SHIPPING_SETTING_INVALID` | 500 | 배송 설정 금액이 유효하지 않습니다. | O-T1 계산기 fail-fast — 배송 3필드 중 null 발견 시(정상경로 아님, V9 NOT NULL로 사실상 도달 불가한 심층방어) |
 
 > `ORDER_NOT_FOUND`(404)·`ORDER_INVALID_STATUS`(409)는 기존 재사용. 운송장 필수(`ShipOrderRequest.trackingNo @NotBlank`)·취소 사유 등 입력 검증은 Bean Validation → `COMMON_VALIDATION_ERROR` 재사용.
@@ -130,13 +130,15 @@ F. Foundation (RBAC·@PreAuthorize·AdminPrincipal)  [완료]
 
 ---
 
-### O-T2 — 상태 전이표 + 전이 서비스 (D1) · **[수동리뷰 필수]**
+### O-T2 — 상태 전이표 + 엔티티 전이 가드 (D1) · **[수동리뷰 필수]**
 
 > **[수동리뷰 필수]** 근거: **상태머신 골격 — R이 그대로 답습할 표준**. 여기서 굳힌 패턴(enum+맵+단일 choke point)이 R까지 전파되므로 커밋 전 승인.
 
 **범위**
 - **enum + 허용전이 맵**(`order-decisions.md` §5.2): `OrderStatus`, `ShippingStatus` enum + 각자의 `static Map<_, Set<_>> ALLOWED`. DB 컬럼은 VARCHAR 유지(마이그레이션 불요), 경계에서 문자열↔enum 변환 + 파싱 방어.
-- **전이 서비스**(`AdminOrderService` 또는 전용 `OrderTransitionService`): from→to를 맵으로 검증, 위반 시 `ORDER_TRANSITION_INVALID`(409)를 **단일 지점**에서 throw. §5.3 액션 레이어의 골격(액션→어느 컬럼 이동) 정의.
+- **엔티티 전이 가드(단일 choke point)** — *구현 확정*: 전이 강제는 서비스가 아니라 **엔티티 `Order.changeStatus(OrderStatus)`**가 수행한다. `OrderStatus` 전이표로 from→to를 검증하고 위반 시 `ORDER_TRANSITION_INVALID`(409)를 던진다. 서비스(`AdminOrderService`)는 로드+오케스트레이션(재고 복원 등)만 맡고, **모든 전이 경로(결제·관리자·향후 R)가 반드시 이 엔티티 메서드를 통과 → 서비스를 우회해도 비허용 전이가 불가능**(O-T1 계산기 fail-fast와 같은 "우회 불가" 철학). 자유 문자열 `transitTo(String)`는 제거.
+  - **엔티티 첫 비즈니스 예외 케이스(의식적 채택)**: 기존 엔티티 메서드(`User.changeGrade`·`Product.changeStatus`·`*.softDelete` 등)는 전부 "검증 없이 상태만 set" 패턴이었다. `changeStatus`는 **엔티티가 비즈니스 불변식을 강제하며 예외를 던지는 첫 사례**로, 의도적으로 채택한 표준이다.
+  - **R이 답습**: R의 `ReturnStatus`도 동일하게 **엔티티 전이 가드**(전이표 + `Return.changeStatus` 류)를 둔다 — `transitTo(String)` 자유 문자열 방식은 쓰지 않는다.
 - **order_status 단독 액션 엔드포인트**(O1 prepare, O2 cancel) + `markReturned` **서비스 메서드**(R이 호출, 엔드포인트는 R 소유).
 - **기존 `transitTo("PAID")` 승격**: `PaymentService`의 `order.transitTo("PAID")`를 전이표 경유로 바꾸되 **M4 결제 경로 회귀 없게 최소 개입**(PENDING→PAID가 맵 허용전이임을 보장).
 - **취소(O2) 부수효과 = O-Q1 확정(2026-07-01)**: 관리자 취소 = `order_status→CANCELED` + **재고 즉시 복원** + **`payment_status` 불변**. 취소는 **O-T2 안에 유지**(별도 task 분리 안 함).
@@ -238,6 +240,7 @@ F. Foundation (RBAC·@PreAuthorize·AdminPrincipal)  [완료]
   - **(b) `payment_status` 불변**. O는 REFUNDED로 바꾸지 않음("환불 표시했는데 미실행"이 더 나쁜 거짓). **"order=CANCELED / payment=PAID"는 의도된 중간 상태**, 환불 실행 + payment 정합은 **R 소유**.
   - 취소는 **O-T2 안에 유지**(별도 task 분리 안 함). 재고 복원·이중복원 방지·결제 불변은 O-T2 완료기준에서 별도로 촘촘히 검증(위 O-T2 참조).
 - (경미, 미확정) `SHIPPING_SETTING_INVALID` 신설 vs `SHIPPING_SETTING_NOT_FOUND` 재사용(§0.4) — 구현 시 택1, 기본은 신설. **블로킹 아님**(O-T1에서 구현자 판단).
+- 🧱 **빚(제품 결정 대기): 취소 사유 추적** — `dat_order`에 취소사유 컬럼이 없어 O-T2 취소 액션은 요청 바디(`CancelOrderRequest{reason}`)를 두지 않았다(저장 못 하는 값을 받는 오해 API 회피). **취소 사유 추적이 제품 요구로 확정되면 V10 컬럼(`cancel_reason`) + 요청 바디 추가**. 현재는 감사(`u_user`)가 누가 취소했는지만 기록.
 
 > O-Q1 확정으로 **모든 블로킹 결정 해소** — O-T1부터 착수 가능.
 
@@ -252,6 +255,6 @@ F. Foundation (RBAC·@PreAuthorize·AdminPrincipal)  [완료]
 | D3 썸네일 | (ii) placeholder 유지 + 빚 존속(스냅샷 컬럼 없음) | **O-T4** |
 | Q-A 2컬럼 | (b) 분리 유지 + §5.3 동기화 규칙 | O-T3(핵심) |
 | Q-B 되돌리기 | 단방향 + 취소만, 순환 없음 | O-T2 전이표 |
-| Q-C 소유권 | 전이표=O 단일소유, R이 O 전이서비스 호출 | O-T2(markReturned 메서드) |
+| Q-C 소유권 | 전이표=O 단일소유, R이 O의 `changeStatus`(엔티티 전이 가드) 호출 | O-T2(맵 항목 `DELIVERED→RETURNED` = R provision, 별도 메서드 불요) |
 | Q-E 에러코드 | `ORDER_TRANSITION_INVALID`(409) 신설 | O-T2 |
 | **O-Q1 취소 부수효과** | (a)재고 즉시복원(대칭 메서드) + (b)payment 불변(환불=R). "order=CANCELED/payment=PAID"=의도된 중간상태 | **O-T2**(취소 O2) |

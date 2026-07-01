@@ -170,7 +170,7 @@
 | **D3** | (ii) placeholder 유지 + 빚 존속 | M4 주문생성 경로 불변. `dat_order_item.image_url` 스냅샷 컬럼 **추가 안 함** |
 | **Q-A** | (b) **2컬럼 분리 유지** | `order_status`(주문 생명주기) · `shipping_status`(배송 세부)는 서로 다른 질문에 답하는 도메인 모델 → 합치지 않음. 스키마 그대로. **동기화 규칙을 §5.3에 명시** |
 | **Q-B** | 되돌리기 최소화 | 단방향 전진 + 관리자 취소(→CANCELED)만. 역방향 금지. **전이 그래프에 순환 없음** |
-| **Q-C** | 전이표(규칙) = **O 단일 소유** | O 전이표에 관리자 직접취소(PAID/PREPARING→CANCELED) 포함. R발 CANCELED/RETURNED는 **R이 O의 전이 서비스를 호출**(규칙=O, 트리거=액션 소유자). RETURNED 진입은 R 종결이 유발 |
+| **Q-C** | 전이표(규칙) = **O 단일 소유** | O 전이표에 관리자 직접취소(PAID/PREPARING→CANCELED) 포함. R발 CANCELED/RETURNED는 **R이 O의 `Order.changeStatus`(엔티티 전이 가드)를 호출**(규칙=O, 트리거=액션 소유자). RETURNED 진입은 R 종결이 유발 |
 | **Q-D** | (ii) placeholder | D3와 동일 |
 | **Q-E** | 신규 `ORDER_TRANSITION_INVALID`(409) | 기존 `ORDER_INVALID_STATUS`("비-PENDING 결제 시도")와 의미 분리 |
 
@@ -227,12 +227,12 @@ DELIVERED  → { }                            // 종결(terminal)
 
 - 신설: `ORDER_TRANSITION_INVALID(HttpStatus.CONFLICT, "허용되지 않은 주문 상태 전이입니다.")`
 - 기존 `ORDER_INVALID_STATUS`(409)는 그대로 두고 의미 분리(비-PENDING 결제 시도 전용).
-- 전이 서비스 **단일 지점**에서만 던진다.
+- **엔티티 `Order.changeStatus` 단일 choke point**에서만 던진다(구현 확정 — 서비스가 아니라 엔티티 레벨, 어떤 호출자도 우회 불가). 기존 엔티티 메서드가 "검증 없이 set"였던 것과 달리 비즈니스 불변식을 강제하는 첫 사례이며, R의 `ReturnStatus`도 이 방식을 답습한다.
 
 ### 5.5 O task 분할 순서 (다음 단계 — 이 문서 확정 후 별도 분할 문서로)
 
 1. **O-T1 (선행): 계산기 방어(D2)** — V9 `NOT NULL`(shipping_fee/free_shipping_min/remote_extra_fee) + `OrderAmountCalculator` fail-fast 가드. O 본체 전 완료. *(빚 #1 청산)*
-2. **O-T2: 상태 전이표 + 전이 서비스** — OrderStatus/ShippingStatus enum + 허용전이 맵 + §5.3 액션 레이어 + `ORDER_TRANSITION_INVALID`. 기존 `transitTo("PAID")`도 전이표 경유로 승격(M4 회귀 없게 최소 개입).
+2. **O-T2: 상태 전이표 + 엔티티 전이 가드** — OrderStatus/ShippingStatus enum + 허용전이 맵 + `Order.changeStatus`(단일 choke point) + `ORDER_TRANSITION_INVALID`. 기존 `transitTo("PAID")`도 `changeStatus(PAID)`로 승격(M4 회귀 없게 최소 개입).
 3. **O-T3: 운송장 입력 + 출고/배송 액션** — `OrderShipping`에 mutator 신설(tracking_no/shipping_status/shipped_date/delivered_date), `ship`/`markInTransit`/`markDelivered` 엔드포인트. 사용자 상세에 자동 반영됨(§0.3 연결 확인).
 4. **O-T4: 주문 목록·검색·상세(admin)** — `OrderSpecs`(orderNo/orderStatus/userSeq/기간, ProductSpecs 패턴 답습), admin 주문 상세.
 
