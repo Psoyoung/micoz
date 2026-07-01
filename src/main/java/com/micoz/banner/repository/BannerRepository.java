@@ -2,10 +2,11 @@ package com.micoz.banner.repository;
 
 import com.micoz.banner.entity.Banner;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.List;
 
-public interface BannerRepository extends JpaRepository<Banner, Long> {
+public interface BannerRepository extends JpaRepository<Banner, Long>, JpaSpecificationExecutor<Banner> {
 
     List<Banner> findAllByBannerTypeAndUseYnAndDisplayYnOrderBySortOrderAsc(String bannerType, String useYn, String displayYn);
 

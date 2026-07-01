@@ -85,7 +85,10 @@ public enum ErrorCode {
     PRODUCT_IMAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "상품 이미지를 찾을 수 없습니다."),
     LABEL_NOT_FOUND(HttpStatus.NOT_FOUND, "라벨을 찾을 수 없습니다."),
     PRODUCT_INVALID_STATUS(HttpStatus.BAD_REQUEST, "허용되지 않는 판매 상태입니다."),
-    PRODUCT_HAS_ORDERS(HttpStatus.CONFLICT, "주문 이력이 있는 상품은 하드 삭제할 수 없습니다.");
+    PRODUCT_HAS_ORDERS(HttpStatus.CONFLICT, "주문 이력이 있는 상품은 하드 삭제할 수 없습니다."),
+
+    // SETTINGS — Banner (M7 S-T1)
+    BANNER_NOT_FOUND(HttpStatus.NOT_FOUND, "배너를 찾을 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String defaultMessage;
