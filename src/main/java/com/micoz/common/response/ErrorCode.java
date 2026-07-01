@@ -96,7 +96,12 @@ public enum ErrorCode {
 
     // ORDER OPS — Shipping 무결성 (M7 O-T1, D2-ii)
     // 설정 행은 있으나 금액 필드가 null(NOT_FOUND=부재와 의미 분리). V9 NOT NULL로 사실상 도달 불가한 계산기 fail-fast 심층방어.
-    SHIPPING_SETTING_INVALID(HttpStatus.INTERNAL_SERVER_ERROR, "배송 설정 금액이 유효하지 않습니다.");
+    SHIPPING_SETTING_INVALID(HttpStatus.INTERNAL_SERVER_ERROR, "배송 설정 금액이 유효하지 않습니다."),
+
+    // ORDER OPS — 상태 전이 (M7 O-T2, D1)
+    // 전이표(OrderStatus/ShippingStatus)에 없는 (from→to). 전이 단일 지점에서만 throw.
+    // 기존 ORDER_INVALID_STATUS(비-PENDING 결제 시도)와 의미 분리(Q-E).
+    ORDER_TRANSITION_INVALID(HttpStatus.CONFLICT, "허용되지 않은 주문 상태 전이입니다.");
 
     private final HttpStatus httpStatus;
     private final String defaultMessage;

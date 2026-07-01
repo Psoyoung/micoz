@@ -1,6 +1,8 @@
 package com.micoz.order.entity;
 
 import com.micoz.common.entity.BaseEntity;
+import com.micoz.common.exception.BusinessException;
+import com.micoz.common.response.ErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -73,7 +75,16 @@ public class Order extends BaseEntity {
         this.orderDate = orderDate != null ? orderDate : OffsetDateTime.now();
     }
 
-    public void transitTo(String newStatus) {
-        this.orderStatus = newStatus;
+    /**
+     * 상태 전이 단일 choke point (O-T2, D1). {@link OrderStatus} 전이표로 허용 여부를 검증하고
+     * 위반이면 {@code ORDER_TRANSITION_INVALID}를 던진다. 모든 전이 경로(결제·관리자·반품)가
+     * 이 메서드를 거치므로 비허용 전이는 어떤 호출자로도 우회할 수 없다.
+     */
+    public void changeStatus(OrderStatus target) {
+        OrderStatus current = OrderStatus.from(this.orderStatus);
+        if (!current.canTransitionTo(target)) {
+            throw new BusinessException(ErrorCode.ORDER_TRANSITION_INVALID);
+        }
+        this.orderStatus = target.name();
     }
 }

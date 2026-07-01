@@ -9,6 +9,7 @@ import com.micoz.order.dto.PayOrderResponse;
 import com.micoz.order.entity.Order;
 import com.micoz.order.entity.OrderItem;
 import com.micoz.order.entity.OrderPayment;
+import com.micoz.order.entity.OrderStatus;
 import com.micoz.order.repository.OrderItemRepository;
 import com.micoz.order.repository.OrderPaymentRepository;
 import com.micoz.order.repository.OrderRepository;
@@ -122,7 +123,7 @@ public class PaymentService {
         payment.markPaid(pgResult.getApprovalNo(), pgResult.getPgTid(), now);
         orderPaymentRepository.save(payment);
 
-        order.transitTo("PAID");
+        order.changeStatus(OrderStatus.PAID); // 전이표 경유 승격(O-T2) — PENDING→PAID 허용전이
 
         // 6. 카트 자동 정리 — 본 주문 항목과 일치(product+option)하는 카트 행 삭제
         cleanCartForItems(userSeq, items);

@@ -64,6 +64,11 @@ public class ProductOption extends BaseEntity {
         return true;
     }
 
+    /** 재고 복원 ({@link #decreaseStock}의 대칭 — O-T2 관리자 취소 시 차감분 원복). */
+    public void increaseStock(int quantity) {
+        this.stockQty = (stockQty == null ? 0 : stockQty) + quantity;
+    }
+
     /** 옵션 수정 (C-T3, seq upsert). */
     public void updateInfo(String optionName, BigDecimal finalPrice, Integer stockQty, Integer sortOrder) {
         this.optionName = optionName;
