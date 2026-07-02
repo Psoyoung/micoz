@@ -73,9 +73,13 @@ class JwtTokenProviderTest {
     @DisplayName("변조된 access token 파싱 → AUTH_TOKEN_INVALID")
     void parse_tamperedToken_throwsInvalid() {
         String token = provider.createAccessToken(1L, "u", "CUSTOMER");
-        // 마지막 한 글자 변경 → 서명 불일치
-        String tampered = token.substring(0, token.length() - 1)
-                + (token.charAt(token.length() - 1) == 'A' ? 'B' : 'A');
+        // payload(2번째 세그먼트) 첫 글자를 변경 → 서명 대상 바이트가 확실히 바뀌어 서명 검증이 항상 실패.
+        // (마지막 글자 변조는 base64url 마지막 문자의 무시 비트만 뒤집힐 수 있어 디코딩 바이트가 그대로 →
+        //  서명이 유효한 채 남는 플래키가 있었다. 결정적 변조로 교체.)
+        String[] parts = token.split("\\.");
+        char first = parts[1].charAt(0);
+        parts[1] = (first == 'A' ? 'B' : 'A') + parts[1].substring(1);
+        String tampered = parts[0] + "." + parts[1] + "." + parts[2];
 
         assertThatThrownBy(() -> provider.parseAccessToken(tampered))
                 .isInstanceOf(BusinessException.class)
