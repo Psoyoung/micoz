@@ -1,6 +1,8 @@
 package com.micoz.order.entity;
 
 import com.micoz.common.entity.BaseEntity;
+import com.micoz.common.exception.BusinessException;
+import com.micoz.common.response.ErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -70,5 +72,36 @@ public class OrderShipping extends BaseEntity {
         this.addressDetail = addressDetail;
         this.shippingMemo = shippingMemo;
         this.shippingStatus = shippingStatus != null ? shippingStatus : "READY";
+    }
+
+    /** 출고: READY → SHIPPED + 운송장·출고일시 기록 (O-T3). */
+    public void ship(String trackingNo, OffsetDateTime when) {
+        changeShippingStatus(ShippingStatus.SHIPPED);
+        this.trackingNo = trackingNo;
+        this.shippedDate = when;
+    }
+
+    /** 배송중 전환: SHIPPED → IN_TRANSIT (O-T3). */
+    public void markInTransit() {
+        changeShippingStatus(ShippingStatus.IN_TRANSIT);
+    }
+
+    /** 배송완료: {SHIPPED|IN_TRANSIT} → DELIVERED + 완료일시 기록 (O-T3). */
+    public void markDelivered(OffsetDateTime when) {
+        changeShippingStatus(ShippingStatus.DELIVERED);
+        this.deliveredDate = when;
+    }
+
+    /**
+     * 배송 상태 전이 단일 choke point ({@link Order#changeStatus}와 동일 패턴). {@link ShippingStatus}
+     * 전이표로 검증하고 위반 시 {@code ORDER_TRANSITION_INVALID}. 2컬럼 동기화(출고/배송완료)의
+     * 원자성은 서비스가 order_status 전이와 함께 사전검증 후 적용해 보장한다(§5.3).
+     */
+    private void changeShippingStatus(ShippingStatus target) {
+        ShippingStatus current = ShippingStatus.from(this.shippingStatus);
+        if (!current.canTransitionTo(target)) {
+            throw new BusinessException(ErrorCode.ORDER_TRANSITION_INVALID);
+        }
+        this.shippingStatus = target.name();
     }
 }

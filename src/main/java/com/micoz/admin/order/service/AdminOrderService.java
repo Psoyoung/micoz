@@ -4,15 +4,19 @@ import com.micoz.common.exception.BusinessException;
 import com.micoz.common.response.ErrorCode;
 import com.micoz.order.entity.Order;
 import com.micoz.order.entity.OrderItem;
+import com.micoz.order.entity.OrderShipping;
 import com.micoz.order.entity.OrderStatus;
+import com.micoz.order.entity.ShippingStatus;
 import com.micoz.order.repository.OrderItemRepository;
 import com.micoz.order.repository.OrderRepository;
+import com.micoz.order.repository.OrderShippingRepository;
 import com.micoz.product.entity.ProductOption;
 import com.micoz.product.repository.ProductOptionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -29,6 +33,7 @@ public class AdminOrderService {
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
+    private final OrderShippingRepository orderShippingRepository;
     private final ProductOptionRepository productOptionRepository;
 
     /** 준비 시작: PAID → PREPARING. */
@@ -48,6 +53,65 @@ public class AdminOrderService {
         Order order = load(orderSeq);
         order.changeStatus(OrderStatus.CANCELED); // 전이 검증이 재고 복원보다 먼저 — 이미 CANCELED면 여기서 차단(이중복원 방지)
         restoreStock(order.getOrderSeq());
+    }
+
+    /**
+     * 출고 (O-T3, 2컬럼 원자 동기화): PREPARING→SHIPPING(order) + READY→SHIPPED(shipping) + 운송장·출고일시.
+     * §5.3: 전제(운송장은 @Valid로 컨트롤러에서 선검증) → 두 컬럼 전이 <b>사전 검증</b>(둘 다 유효할 때만) →
+     * 원자 적용. 한 컬럼이라도 비허용이면 어느 것도 이동하지 않고 ORDER_TRANSITION_INVALID(부분 전이 금지).
+     */
+    @Transactional
+    public void ship(Long orderSeq, String trackingNo) {
+        Order order = load(orderSeq);
+        OrderShipping shipping = loadShipping(orderSeq);
+        requireOrderTransition(order, OrderStatus.SHIPPING);
+        requireShippingTransition(shipping, ShippingStatus.SHIPPED);
+        order.changeStatus(OrderStatus.SHIPPING);
+        shipping.ship(trackingNo, OffsetDateTime.now());
+    }
+
+    /** 배송중 전환 (O-T3): SHIPPED→IN_TRANSIT (shipping_status 단독 — order_status 불변). */
+    @Transactional
+    public void markInTransit(Long orderSeq) {
+        load(orderSeq); // 주문 존재 확인(부재 시 ORDER_NOT_FOUND)
+        OrderShipping shipping = loadShipping(orderSeq);
+        shipping.markInTransit();
+    }
+
+    /**
+     * 배송완료 (O-T3, 2컬럼 원자 동기화): SHIPPING→DELIVERED(order) + {SHIPPED|IN_TRANSIT}→DELIVERED(shipping)
+     * + 완료일시. ship과 동일하게 두 컬럼 사전 검증 후 원자 적용(부분 전이 금지).
+     */
+    @Transactional
+    public void deliver(Long orderSeq) {
+        Order order = load(orderSeq);
+        OrderShipping shipping = loadShipping(orderSeq);
+        requireOrderTransition(order, OrderStatus.DELIVERED);
+        requireShippingTransition(shipping, ShippingStatus.DELIVERED);
+        order.changeStatus(OrderStatus.DELIVERED);
+        shipping.markDelivered(OffsetDateTime.now());
+    }
+
+    /**
+     * 두 컬럼 전이의 <b>사전 검증</b>(순수 판정, 상태 미변경). 둘 다 통과해야 이후 적용 단계로 진행하므로
+     * "한 컬럼만 이동하고 다른 컬럼 실패로 남는" 부분 전이가 원천 차단된다(§5.3). 엔티티 전이 가드는
+     * 적용 단계에서 다시 검증하나(단일 choke point 유지), 여기서 걸러지면 어느 컬럼도 변경되지 않는다.
+     */
+    private void requireOrderTransition(Order order, OrderStatus target) {
+        if (!OrderStatus.from(order.getOrderStatus()).canTransitionTo(target)) {
+            throw new BusinessException(ErrorCode.ORDER_TRANSITION_INVALID);
+        }
+    }
+
+    private void requireShippingTransition(OrderShipping shipping, ShippingStatus target) {
+        if (!ShippingStatus.from(shipping.getShippingStatus()).canTransitionTo(target)) {
+            throw new BusinessException(ErrorCode.ORDER_TRANSITION_INVALID);
+        }
+    }
+
+    private OrderShipping loadShipping(Long orderSeq) {
+        return orderShippingRepository.findByOrderSeq(orderSeq)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
     }
 
     /**
