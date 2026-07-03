@@ -101,7 +101,11 @@ public enum ErrorCode {
     // ORDER OPS — 상태 전이 (M7 O-T2, D1)
     // 전이표(OrderStatus/ShippingStatus)에 없는 (from→to). 전이 단일 지점에서만 throw.
     // 기존 ORDER_INVALID_STATUS(비-PENDING 결제 시도)와 의미 분리(Q-E).
-    ORDER_TRANSITION_INVALID(HttpStatus.CONFLICT, "허용되지 않은 주문 상태 전이입니다.");
+    ORDER_TRANSITION_INVALID(HttpStatus.CONFLICT, "허용되지 않은 주문 상태 전이입니다."),
+
+    // RETURNS — 반품 상태 전이 (M7 R-T2, RD1)
+    // 반품 전이표(ReturnStatus)에 없는 (from→to). Return.changeStatus 단일 지점 throw. O의 ORDER_TRANSITION_INVALID와 동형.
+    RETURN_TRANSITION_INVALID(HttpStatus.CONFLICT, "허용되지 않은 반품 상태 전이입니다.");
 
     private final HttpStatus httpStatus;
     private final String defaultMessage;

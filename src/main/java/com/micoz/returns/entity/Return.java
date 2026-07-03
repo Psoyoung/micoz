@@ -1,6 +1,8 @@
 package com.micoz.returns.entity;
 
 import com.micoz.common.entity.BaseEntity;
+import com.micoz.common.exception.BusinessException;
+import com.micoz.common.response.ErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -96,12 +98,22 @@ public class Return extends BaseEntity {
         this.requestedDate = requestedDate != null ? requestedDate : OffsetDateTime.now();
     }
 
-    public void transitTo(String newStatus) {
-        this.returnStatus = newStatus;
+    /**
+     * 상태 전이 단일 choke point (R-T2, RD1). {@link ReturnStatus} 전이표로 허용 여부를 검증하고
+     * 위반이면 {@code RETURN_TRANSITION_INVALID}를 던진다. 모든 전이 경로(승인·회수·검수·완료·반려)가
+     * 이 메서드를 거치므로 비허용 전이는 어떤 호출자로도 우회할 수 없다(O의 {@code Order.changeStatus} 동형).
+     */
+    public void changeStatus(ReturnStatus target) {
+        ReturnStatus current = ReturnStatus.from(this.returnStatus);
+        if (!current.canTransitionTo(target)) {
+            throw new BusinessException(ErrorCode.RETURN_TRANSITION_INVALID);
+        }
+        this.returnStatus = target.name();
     }
 
+    /** 완료: {@code changeStatus(COMPLETED)}(INSPECTED에서만 허용) 경유 + 완료일시 기록. */
     public void markCompleted(OffsetDateTime when) {
-        this.returnStatus = "COMPLETED";
+        changeStatus(ReturnStatus.COMPLETED);
         this.completedDate = when;
     }
 }
