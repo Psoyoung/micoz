@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -51,5 +52,30 @@ public class OrderStockRestorer {
             ProductOption option = byId.get(item.getOptionSeq());
             if (option != null) option.increaseStock(item.getQuantity());
         }
+    }
+
+    /**
+     * (옵션seq → 수량) 지정분만 복원 — R 반품의 <b>부분 수량</b> 복원용(R-T4). 재판매 필터는 호출자가
+     * units 구성 시 적용(restock_yn='Y'). 위 {@link #restore(Long, Predicate)}(O 전량 복원 경로)와 독립 —
+     * O 취소 동작은 이 메서드 추가로 바뀌지 않는다.
+     */
+    @Transactional
+    public void restoreQuantities(Collection<StockRestoreUnit> units) {
+        Map<Long, Integer> byOption = new java.util.HashMap<>();
+        for (StockRestoreUnit u : units) {
+            if (u.optionSeq() == null || u.quantity() <= 0) continue;
+            byOption.merge(u.optionSeq(), u.quantity(), Integer::sum);
+        }
+        if (byOption.isEmpty()) return;
+        Map<Long, ProductOption> byId = productOptionRepository.findAllById(byOption.keySet()).stream()
+                .collect(Collectors.toMap(ProductOption::getOptionSeq, o -> o));
+        byOption.forEach((optionSeq, qty) -> {
+            ProductOption option = byId.get(optionSeq);
+            if (option != null) option.increaseStock(qty);
+        });
+    }
+
+    /** 복원 단위: 어떤 옵션을 몇 개 되돌릴지(R 반품 부분 복원). */
+    public record StockRestoreUnit(Long optionSeq, int quantity) {
     }
 }

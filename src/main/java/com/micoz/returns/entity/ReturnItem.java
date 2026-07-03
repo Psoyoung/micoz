@@ -41,6 +41,11 @@ public class ReturnItem extends BaseCreatedEntity {
     @Column(name = "use_yn", length = 1)
     private String useYn;
 
+    /** 재입고 여부(Y/N) — 검수 시 판정(R-T4). null=미판정. */
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(name = "restock_yn", length = 1)
+    private String restockYn;
+
     @Builder
     private ReturnItem(Long returnSeq, Long itemSeq, Integer quantity,
                        Long exchangeOptionSeq, String useYn) {
@@ -49,5 +54,10 @@ public class ReturnItem extends BaseCreatedEntity {
         this.quantity = quantity;
         this.exchangeOptionSeq = exchangeOptionSeq;
         this.useYn = useYn != null ? useYn : "Y";
+    }
+
+    /** 검수 시 재입고 판정 기록(R-T4). */
+    public void applyRestock(String restockYn) {
+        this.restockYn = restockYn;
     }
 }

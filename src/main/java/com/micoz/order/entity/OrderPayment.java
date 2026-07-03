@@ -87,4 +87,10 @@ public class OrderPayment extends BaseEntity {
         this.paymentStatus = "CANCELED";
         this.canceledDate = when;
     }
+
+    /** 환불 완료(R-T4). Mock PG 환불 성공 후 REFUNDED 기록(실이체 없음). */
+    public void markRefunded(OffsetDateTime when) {
+        this.paymentStatus = "REFUNDED";
+        this.canceledDate = when;
+    }
 }
