@@ -116,4 +116,10 @@ public class Return extends BaseEntity {
         changeStatus(ReturnStatus.COMPLETED);
         this.completedDate = when;
     }
+
+    /** 환불 확정 (R-T3): 산정된 현금 환불액·회수 배송비 기록. */
+    public void applyRefund(BigDecimal refundAmount, BigDecimal returnShippingFee) {
+        this.refundAmount = refundAmount;
+        this.returnShippingFee = returnShippingFee;
+    }
 }
