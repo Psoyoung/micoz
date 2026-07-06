@@ -8,7 +8,7 @@
 
 ## 1. 진행 현황 (M7 = 관리자 백오피스, 8개 모듈)
 
-**CS 4커밋 push 완료 → origin/main = `733bb12`**. 로컬은 D 결정/HANDOFF docs가 선행(`92aca0c`~, push는 승인 후). 최신 마이그레이션 = **V10**(다음 컬럼은 V11+). **완료 7모듈 / 남은 1모듈(D — 결정 확정, 분할 착수)**.
+**M7 8/8 모듈 완료** 🎉. CS는 origin push 완료(origin/main = `733bb12`), **D + docs는 로컬 선행(`92aca0c`~`a800601`, push는 승인 후)**. 최신 마이그레이션 = **V11**(대시보드 인덱스). **완료 8모듈 / 남은 0**.
 
 | 모듈 | 상태 | 대표 커밋(범위) |
 |---|---|---|
@@ -19,9 +19,9 @@
 | **O** Order Ops 주문운영 | ✅ 완료 | `747c46d`(O-T1)~`9d5e9bf`(O-T4) |
 | **R** Returns 반품/교환 | ✅ 완료 | `67a1d4d`(R-T1)~`08abdd1`(R-T4) |
 | **CS** Customer Support 문의응대 | ✅ 완료 | `4d52f5a`(CS-T1)~`b547b89`(CS-T3) |
-| **D** Dashboard 대시보드 | ⛔ **남음** | — (FR-ADM-01) |
+| **D** Dashboard 대시보드 | ✅ 완료 | `dc1e4b0`(D-T1)~`a800601`(D-T3) |
 
-테스트 총계(최근 빌드): **35 스위트 / 241 테스트 / 실패 0**. 사용자 측 M1~M6(회원가입·상품·카트·주문·반품신청 등)은 M7 이전에 완료됨(`46d1a76`·`83abeff`·`b3b3f8d` 등).
+테스트 총계(최근 빌드): **38 스위트 / 258 테스트 / 실패 0**. 사용자 측 M1~M6(회원가입·상품·카트·주문·반품신청 등)은 M7 이전에 완료됨(`46d1a76`·`83abeff`·`b3b3f8d` 등).
 
 ---
 
@@ -81,11 +81,16 @@
 | 6 | **재고 차감 응집 미완** — 복원은 `OrderStockRestorer`로 응집(R-T1), **차감(`decreaseStock`)은 `PaymentService`에 잔존** | 낮 | 차감도 공유 컴포넌트로 이동 검토 |
 | 7 | **malformed 바디 → 500** — 원론상 400 | 낮 | `GlobalExceptionHandler`에 `HttpMessageNotReadableException` 핸들러 |
 | 8 | **배너 imageUrl URL 형식 미검증** | 낮 | `CreateBannerRequest`/`UpdateBannerRequest` |
-| 9 | **AdminMemberSearch 격리 취약** — 활성 CUSTOMER 전수를 절대값(==3)으로 단언 → 선행 테스트가 CUSTOMER 남기면 red(잠복 격리 계열). CS 테스트는 자체 `@AfterEach`로 회피 | 낮 | `AdminMemberSearchIntegrationTest`를 seeded-only 필터로 견고화, 또는 공용 `signupAndLogin`에 정리 훅 |
+| 9 | **AdminMemberSearch 격리 취약** — 활성 CUSTOMER 전수를 절대값(==3)으로 단언 → 선행 테스트가 CUSTOMER 남기면 red(잠복 격리 계열). CS·D 테스트는 자체 `@AfterEach`로 회피. **D-T2에서 또 도졌음**(rbac 테스트의 `signupAndLogin` 누출 → 즉시 정리 훅으로 수정). 반복 재발이라 **우선순위 낮→中 재평가 권장**(회피가 아니라 근본 견고화) | 낮→**中?** | `AdminMemberSearchIntegrationTest`를 seeded-only 필터로 견고화(절대값 단언 제거), 또는 공용 `signupAndLogin`에 정리 훅 |
 | 10 | **EXCHANGE 차액 순매출 편입** — D 순매출은 `return_type='RETURN'` COMPLETED refund만 차감. EXCHANGE는 현재 `refund_amount` 항상 0(차액 교환·재출고 미구현, 빚 #3 연동)이라 대상 제외. 차액 교환 구현 시 순매출 차감 대상 편입 필요 | — | 빚 #3(EXCHANGE 재출고) 구현 시 `refund_amount` 산정 + D 순매출 산식에 EXCHANGE COMPLETED 포함 |
 | 11 | **GA 유입 위젯** — D 대시보드 유입경로 위젯은 GA 연동 범위 미확정(PRD FR-ADM-01·§9, admin-overview §4.2)이라 D 범위 제외(Mock도 미제공) | — | GA 연동 범위 확정 후 유입 위젯 엔드포인트 신설 |
 
-**현황(2026-07-06)**: 11건 **전부 열림**(#10·#11은 D 결정 라운드에서 식별된 범위밖 이연 — 구현 부채 아닌 스코프 이연). 특히 **#1 환불 원장 정합(中)·#2 prior 동시성(中)** 은 D(read 집계)와 무관하므로 그대로 열림 유지. CS 관련 추가 미구현(CLOSED 종료 흐름·재문의 되돌리기·답변 알림)은 FR 근거 없어 빚 아님(범위 밖).
+**현황(2026-07-06, M7 완료 시점)**: **11건 전부 열림**(D에서 닫은 빚 없음, #10·#11 신규 이연). 우선순위별:
+- **中**: #1 환불 원장 정합 · #2 prior 동시성 — D(read 집계)와 무관해 그대로 열림. M7 후속 최우선 후보.
+- **재평가 대상**: #9 격리 취약 — D-T2에서 재발(3번째)이라 **낮→中 승격 검토**(회피 누적 중, 근본 견고화 필요).
+- **낮**: #6 재고차감 응집 · #7 malformed 400 · #8 배너 URL 검증.
+- **스코프 이연(구현 부채 아님)**: #3 EXCHANGE 재출고 · #4 회수비 설정화 · #5 취소사유 컬럼 · #10 EXCHANGE 차액 순매출(#3 연동) · #11 GA 유입 위젯(외부 연동 확정 후).
+CS/D 관련 추가 미구현(CLOSED 흐름·재문의 되돌리기·답변 알림·GA 실연동)은 FR 근거 없어 빚 아님(범위 밖).
 닫힌 빚: 계산기 null-guard(O-T1, V9 NOT NULL + fail-fast) ✅.
 
 ---
@@ -111,17 +116,17 @@
 
 ## 7. 다음 작업
 
-권장 순서(admin-overview §2): **D (유일 잔여 모듈)**. CS는 완료(아래).
+**M7 관리자 백오피스 8/8 모듈 완료 — 신규 모듈 없음.** 후속은 열린 빚(§4)뿐.
 
-- **CS. Customer Support** — ✅ **완료**(`4d52f5a`~`b547b89`). 결정·구현 정본 `docs/tasks-CS-support.md`(§4 CS-Q 확정: append-only 정책·answeredDate 불변·2상태·CLOSED 유령상태). 진입 시 확인할 것들은 전부 실측으로 확정됨.
-- **D. Dashboard** (FR-ADM-01, **최우선·잔여 유일**): 매출/주문 KPI·추이·기간 필터 — **O/R/M/C/CS 전반 read 집계**(앞 모듈 완료가 전제).
-  - **위험 프로파일이 write 모듈과 다름**: 상태·금액을 바꾸지 않는 **순수 read**라 전이/원자성 관심사가 없다. 대신 새 관심사는 ⓐ **집계 정확성**(합계·건수 정의), ⓑ **성능**(N+1·풀스캔 — 기간·상태 인덱스), ⓒ **기간 필터 경계**(타임존 — `i_date`/주문일 등 TIMESTAMPTZ vs 로컬 일자 경계).
-  - 문의 KPI 즉시 산출 가능: WAITING 적체 = `status=WAITING` count, 평균 응답시간 = `answeredDate − i_date`(CS-Q② answeredDate 불변이 이 집계를 정확히 유지).
-  - **결정 확정**(`docs/dashboard-decisions.md`, 2026-07-06):
-    - **총매출** = `Σ final_amount WHERE order_status ∈ {PAID,PREPARING,SHIPPING,DELIVERED,RETURNED}`(**CANCELED만 제외**), `order_date` 귀속.
-    - **순매출** = 총매출 − `Σ refund_amount WHERE return_type='RETURN' AND status='COMPLETED'`, `completed_date` 귀속. (EXCHANGE refund 항상 0 실측 → 제외; CANCEL은 총매출 제외로 이미 반영 = 이중차감 회피.)
-    - **순매출 음수 가능**: 총매출은 order_date·환불은 completed_date 귀속이라 귀속 컬럼 상이 → 발생주의의 정확한 귀결(버그 아님).
-    - 부분반품 함정 실측: order_status는 전체반품만 잡음 → 순매출은 반드시 `refund_amount`로 차감. 타임존: KST 명시 산출 + 반개구간 `[start,nextStart)`. 인덱스: D-T1 EXPLAIN 실측 후 V11.
-  - **GA 의존 유입 위젯 = 범위 제외 확정**(Mock 미제공, 빚 #11).
+- **후속 최우선 후보**: §4 **中** — #1 환불 원장 정합(쿠폰·포인트 원장 반영) · #2 prior 동시성(반품 동시완료 직렬화). 둘 다 R 모듈 잔여이며 D와 무관.
+- **테스트 위생**: #9 격리 취약이 D-T2에서 3번째 재발 → 근본 견고화(절대값 단언 제거) 우선순위 재평가 검토.
+- **외부 연동 확정 대기**: #3 EXCHANGE 재출고(+#10 EXCHANGE 순매출 편입 연동) · #11 GA 유입 위젯.
 
-새 모듈도 동일하게 **결정 라운드(`*-decisions.md`) → task 분할(`tasks-*.md`) → 게이트(검증→커밋후보→승인)** 방식으로 진행.
+**D. Dashboard — ✅ 완료**(`dc1e4b0`~`a800601`, 3 task). 결정·구현 정본 `docs/dashboard-decisions.md` + `docs/tasks-D-dashboard.md`. **매출 정의 정본(이 시스템의 매출 정의가 됨 — 기존 코드에 정의 부재였음)**:
+- **총매출** = `Σ final_amount WHERE order_status ∈ {PAID,PREPARING,SHIPPING,DELIVERED,RETURNED}`(**CANCELED만 제외**), `order_date` 귀속.
+- **순매출** = 총매출 − `Σ refund_amount WHERE return_type='RETURN' AND status='COMPLETED'`, `completed_date` 귀속. EXCHANGE(refund 0 실측)·CANCEL(총매출 제외)은 미차감 = 이중차감 회피.
+- **순매출 음수 가능**(발생주의, 귀속 컬럼 상이) — **클램프 금지**(코드·응답·프론트 축 음수). 부분반품은 order_status 미변경이라 refund로만 차감.
+- 타임존 = KST(`Asia/Seoul`) 반개구간 `[start,nextStart)`(`KstPeriods`). 인덱스 = V11(EXPLAIN 실측 근거: Seq Scan→Index/Bitmap). GA 유입 위젯 범위 제외(#11).
+- 엔드포인트: `GET /api/v1/admin/dashboard/{summary,sales-trend}`. 집계 로직 `admin.dashboard.*`(도메인 역의존 없음).
+
+향후 새 모듈이 생기면 동일하게 **결정 라운드(`*-decisions.md`) → task 분할(`tasks-*.md`) → 게이트(검증→커밋후보→승인)** 방식으로 진행.
