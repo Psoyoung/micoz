@@ -105,7 +105,11 @@ public enum ErrorCode {
 
     // RETURNS — 반품 상태 전이 (M7 R-T2, RD1)
     // 반품 전이표(ReturnStatus)에 없는 (from→to). Return.changeStatus 단일 지점 throw. O의 ORDER_TRANSITION_INVALID와 동형.
-    RETURN_TRANSITION_INVALID(HttpStatus.CONFLICT, "허용되지 않은 반품 상태 전이입니다.");
+    RETURN_TRANSITION_INVALID(HttpStatus.CONFLICT, "허용되지 않은 반품 상태 전이입니다."),
+
+    // CS — 문의 상태 전이 (M7 CS-T1)
+    // 문의 전이표(InquiryStatus)에 없는 (from→to). Inquiry.changeStatus 단일 지점 throw. O/R의 *_TRANSITION_INVALID와 동형.
+    INQUIRY_TRANSITION_INVALID(HttpStatus.CONFLICT, "허용되지 않은 문의 상태 전이입니다.");
 
     private final HttpStatus httpStatus;
     private final String defaultMessage;

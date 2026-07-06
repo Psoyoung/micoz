@@ -1,6 +1,8 @@
 package com.micoz.inquiry.entity;
 
 import com.micoz.common.entity.BaseEntity;
+import com.micoz.common.exception.BusinessException;
+import com.micoz.common.response.ErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -80,8 +82,26 @@ public class Inquiry extends BaseEntity {
         this.useYn = useYn != null ? useYn : "Y";
     }
 
+    /**
+     * 상태 전이 단일 choke point (CS-T1). {@link InquiryStatus} 전이표로 허용 여부를 검증하고
+     * 위반이면 {@code INQUIRY_TRANSITION_INVALID}를 던진다. 모든 전이가 이 메서드를 거치므로 비허용
+     * 전이는 어떤 호출자로도 우회할 수 없다(R의 {@code Return.changeStatus} 동형). free-string 대입 금지(§2.1).
+     */
+    public void changeStatus(InquiryStatus target) {
+        InquiryStatus current = InquiryStatus.from(this.inquiryStatus);
+        if (!current.canTransitionTo(target)) {
+            throw new BusinessException(ErrorCode.INQUIRY_TRANSITION_INVALID);
+        }
+        this.inquiryStatus = target.name();
+    }
+
+    /**
+     * 최초 답변: {@code changeStatus(ANSWERED)}(WAITING에서만 허용) 경유 + 답변완료일시 기록.
+     * 재답변은 이 메서드를 호출하지 않는다 — ANSWERED 상태에선 답변만 append하고 {@code answeredDate}는
+     * 최초값을 고정한다(CS-Q②=(a), D 대시보드 SLA 집계 보호). 호출 분기는 서비스가 담당(CS-T3).
+     */
     public void markAnswered(OffsetDateTime when) {
-        this.inquiryStatus = "ANSWERED";
+        changeStatus(InquiryStatus.ANSWERED);
         this.answeredDate = when;
     }
 }
