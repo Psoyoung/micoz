@@ -2,12 +2,13 @@
 
 > 새 세션이 5분 안에 맥락을 복원하기 위한 문서. **기존 커밋·문서·코드에서 추린 사실만.** 새 기능 지시 아님.
 > 스택: Spring Boot 3.3.5 / Java 17 / PostgreSQL 15. 빌드·테스트는 Docker 컨테이너(`gradle:8.8-jdk17-alpine` + Docker socket, Testcontainers).
+> **러너(실측)**: 이 환경 Docker **24.0.7/MinAPI 1.12**라 통합 러너 정상, 별도 설정 불요. (v29+ 환경에선 min API 1.40+로 Testcontainers 1.19.8의 docker-java 1.32 ping이 막힐 수 있고, **그때만** `src/test/resources/docker-java.properties`에 `api.version=<데몬 min 실측값>` 조건부 A안. 상세 `docs/tasks-CS-support.md` §6.) → "러너 막혔다" 오해나 v29 당황 방지.
 
 ---
 
 ## 1. 진행 현황 (M7 = 관리자 백오피스, 8개 모듈)
 
-**origin/main HEAD = `08abdd1`** (로컬↔origin 동기화 완료, 미반영 커밋 없음). 최신 마이그레이션 = **V10**(다음 컬럼은 V11+).
+**로컬 HEAD = `b547b89`** (CS 4커밋 로컬 선행 — **origin/main = `08abdd1`, 아직 push 안 함**). 최신 마이그레이션 = **V10**(다음 컬럼은 V11+). **완료 7모듈 / 남은 1모듈(D)**.
 
 | 모듈 | 상태 | 대표 커밋(범위) |
 |---|---|---|
@@ -17,10 +18,10 @@
 | **S** Settings 운영설정(배너·배송비) | ✅ 완료 | `4a8384a`(S-T1)·`8a56f4a`(S-T2) |
 | **O** Order Ops 주문운영 | ✅ 완료 | `747c46d`(O-T1)~`9d5e9bf`(O-T4) |
 | **R** Returns 반품/교환 | ✅ 완료 | `67a1d4d`(R-T1)~`08abdd1`(R-T4) |
-| **CS** Customer Support 문의응대 | ⛔ **남음** | — (FR-ADM-07) |
+| **CS** Customer Support 문의응대 | ✅ 완료 | `4d52f5a`(CS-T1)~`b547b89`(CS-T3) |
 | **D** Dashboard 대시보드 | ⛔ **남음** | — (FR-ADM-01) |
 
-테스트 총계(최근 빌드): **32 스위트 / 224 테스트 / 실패 0**. 사용자 측 M1~M6(회원가입·상품·카트·주문·반품신청 등)은 M7 이전에 완료됨(`46d1a76`·`83abeff`·`b3b3f8d` 등).
+테스트 총계(최근 빌드): **35 스위트 / 241 테스트 / 실패 0**. 사용자 측 M1~M6(회원가입·상품·카트·주문·반품신청 등)은 M7 이전에 완료됨(`46d1a76`·`83abeff`·`b3b3f8d` 등).
 
 ---
 
@@ -80,7 +81,9 @@
 | 6 | **재고 차감 응집 미완** — 복원은 `OrderStockRestorer`로 응집(R-T1), **차감(`decreaseStock`)은 `PaymentService`에 잔존** | 낮 | 차감도 공유 컴포넌트로 이동 검토 |
 | 7 | **malformed 바디 → 500** — 원론상 400 | 낮 | `GlobalExceptionHandler`에 `HttpMessageNotReadableException` 핸들러 |
 | 8 | **배너 imageUrl URL 형식 미검증** | 낮 | `CreateBannerRequest`/`UpdateBannerRequest` |
+| 9 | **AdminMemberSearch 격리 취약** — 활성 CUSTOMER 전수를 절대값(==3)으로 단언 → 선행 테스트가 CUSTOMER 남기면 red(잠복 격리 계열). CS 테스트는 자체 `@AfterEach`로 회피 | 낮 | `AdminMemberSearchIntegrationTest`를 seeded-only 필터로 견고화, 또는 공용 `signupAndLogin`에 정리 훅 |
 
+**현황(2026-07-06)**: 9건 **전부 열림**(이번 CS 모듈에서 닫은 빚 없음). 특히 **#1 환불 원장 정합(中)·#2 prior 동시성(中)** 은 D(read 집계)와 무관하므로 그대로 열림 유지. CS 관련 추가 미구현(CLOSED 종료 흐름·재문의 되돌리기·답변 알림)은 FR 근거 없어 빚 아님(범위 밖).
 닫힌 빚: 계산기 null-guard(O-T1, V9 NOT NULL + fail-fast) ✅.
 
 ---
@@ -106,12 +109,12 @@
 
 ## 7. 다음 작업
 
-권장 순서(admin-overview §2): **CS → D**.
+권장 순서(admin-overview §2): **D (유일 잔여 모듈)**. CS는 완료(아래).
 
-- **CS. Customer Support** (FR-ADM-07, 경량 — `dat_inquiry`·`dat_inquiry_reply`):
-  - 문의 상태 전이 `WAITING → ANSWERED` → **§2.1 전이 가드 패턴 답습**(경량이라 단순).
-  - 답변 등록(`dat_inquiry_reply` **append-only**, §3.4) + 목록/상세(**§2.2 검색 패턴 답습**).
-  - **CS 진입 시 확인할 것**: ① 답변 append-only 정책(재답변/수정 허용 여부) ② `WAITING↔ANSWERED` 되돌리기(재문의 시) 허용 여부 ③ FR-MY-04 사용자 측 문의 조회 노출 연결(답변이 사용자에게 어떻게 보이는지) ④ **`dat_inquiry_reply`가 실제 append-only 구조인지 스키마에서 실측**(`use_yn`·수정 컬럼 유무 — §3.4 서술이 아니라 실제 컬럼으로 확인).
-- **D. Dashboard** (FR-ADM-01): 매출/주문 KPI·추이·기간 필터 — **O/R/M/C 전반 read 집계**(앞 모듈 완료가 전제). GA 의존 위젯은 범위 판단 필요.
+- **CS. Customer Support** — ✅ **완료**(`4d52f5a`~`b547b89`). 결정·구현 정본 `docs/tasks-CS-support.md`(§4 CS-Q 확정: append-only 정책·answeredDate 불변·2상태·CLOSED 유령상태). 진입 시 확인할 것들은 전부 실측으로 확정됨.
+- **D. Dashboard** (FR-ADM-01, **최우선·잔여 유일**): 매출/주문 KPI·추이·기간 필터 — **O/R/M/C/CS 전반 read 집계**(앞 모듈 완료가 전제).
+  - **위험 프로파일이 write 모듈과 다름**: 상태·금액을 바꾸지 않는 **순수 read**라 전이/원자성 관심사가 없다. 대신 새 관심사는 ⓐ **집계 정확성**(합계·건수 정의), ⓑ **성능**(N+1·풀스캔 — 기간·상태 인덱스), ⓒ **기간 필터 경계**(타임존 — `i_date`/주문일 등 TIMESTAMPTZ vs 로컬 일자 경계).
+  - 문의 KPI 즉시 산출 가능: WAITING 적체 = `status=WAITING` count, 평균 응답시간 = `answeredDate − i_date`(CS-Q② answeredDate 불변이 이 집계를 정확히 유지).
+  - **GA 의존 유입 위젯은 범위 판단 필요**(admin-overview §4.2 미해결).
 
 새 모듈도 동일하게 **결정 라운드(`*-decisions.md`) → task 분할(`tasks-*.md`) → 게이트(검증→커밋후보→승인)** 방식으로 진행.
