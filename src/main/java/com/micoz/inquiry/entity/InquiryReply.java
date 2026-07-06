@@ -36,4 +36,19 @@ public class InquiryReply extends BaseEntity {
     @JdbcTypeCode(SqlTypes.CHAR)
     @Column(name = "use_yn", length = 1)
     private String useYn;
+
+    private InquiryReply(Long inquirySeq, Long adminSeq, String content) {
+        this.inquirySeq = inquirySeq;
+        this.adminSeq = adminSeq;
+        this.content = content;
+        this.useYn = "Y";
+    }
+
+    /**
+     * 답변 생성 — <b>append-only</b>(§3.4, CS-Q①). 정정/삭제는 새 답변 추가로 대체하며 update·soft-delete
+     * mutator는 두지 않는다(스키마에 use_yn·u_* 컬럼이 있어도 정책상 미사용). 등록자(i_user)는 AuditorAware 자동.
+     */
+    public static InquiryReply create(Long inquirySeq, Long adminSeq, String content) {
+        return new InquiryReply(inquirySeq, adminSeq, content);
+    }
 }
