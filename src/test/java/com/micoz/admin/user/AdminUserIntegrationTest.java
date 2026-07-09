@@ -161,4 +161,39 @@ class AdminUserIntegrationTest extends IntegrationTestSupport {
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(parse(resp.getBody()).path("code").asText()).isEqualTo("USER_NOT_FOUND");
     }
+
+    // ───────────── 정렬 화이트리스트 (빚 #12 해소) ─────────────
+
+    @Test
+    @DisplayName("허용 정렬 필드(userName)로 정렬 → 200")
+    void allowedSortField() {
+        ResponseEntity<String> resp = getJson("/api/v1/admin/admins?sort=userName,asc", actingToken);
+        assertThat(resp.getStatusCode()).as(resp.getBody()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    @DisplayName("민감 컬럼(userPw) 정렬 시도 → 400 COMMON_INVALID_REQUEST (노출 차단)")
+    void sensitiveSortFieldRejected() {
+        ResponseEntity<String> resp = getJson("/api/v1/admin/admins?sort=userPw,asc", actingToken);
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(parse(resp.getBody()).path("code").asText()).isEqualTo("COMMON_INVALID_REQUEST");
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 정렬 필드 → 400 (500 아님 = 이 수정의 핵심)")
+    void unknownSortFieldIs400Not500() {
+        ResponseEntity<String> resp = getJson("/api/v1/admin/admins?sort=nopeField,asc", actingToken);
+        assertThat(resp.getStatusCode()).as("500이 아니라 400이어야 함: %s", resp.getBody())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(resp.getStatusCode().value()).isNotEqualTo(500);
+        assertThat(parse(resp.getBody()).path("code").asText()).isEqualTo("COMMON_INVALID_REQUEST");
+    }
+
+    @Test
+    @DisplayName("정렬 미지정 기본 조회 → 200 (기본 userSeq desc, 회귀 없음)")
+    void defaultListNoSort() {
+        ResponseEntity<String> resp = getJson("/api/v1/admin/admins", actingToken);
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(parse(resp.getBody()).path("data").path("content").isArray()).isTrue();
+    }
 }
