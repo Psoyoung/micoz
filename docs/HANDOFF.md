@@ -84,15 +84,15 @@
 | 9 | **AdminMemberSearch 격리 취약** — 활성 CUSTOMER 전수를 절대값(==3)으로 단언 → 선행 테스트가 CUSTOMER 남기면 red(잠복 격리 계열). CS·D 테스트는 자체 `@AfterEach`로 회피. **D-T2에서 또 도졌음**(rbac 테스트의 `signupAndLogin` 누출 → 즉시 정리 훅으로 수정). 반복 재발이라 **우선순위 낮→中 재평가 권장**(회피가 아니라 근본 견고화) | 낮→**中?** | `AdminMemberSearchIntegrationTest`를 seeded-only 필터로 견고화(절대값 단언 제거), 또는 공용 `signupAndLogin`에 정리 훅 |
 | 10 | **EXCHANGE 차액 순매출 편입** — D 순매출은 `return_type='RETURN'` COMPLETED refund만 차감. EXCHANGE는 현재 `refund_amount` 항상 0(차액 교환·재출고 미구현, 빚 #3 연동)이라 대상 제외. 차액 교환 구현 시 순매출 차감 대상 편입 필요 | — | 빚 #3(EXCHANGE 재출고) 구현 시 `refund_amount` 산정 + D 순매출 산식에 EXCHANGE COMPLETED 포함 |
 | 11 | **GA 유입 위젯** — D 대시보드 유입경로 위젯은 GA 연동 범위 미확정(PRD FR-ADM-01·§9, admin-overview §4.2)이라 D 범위 제외(Mock도 미제공) | — | GA 연동 범위 확정 후 유입 위젯 엔드포인트 신설 |
-| 12 | **AdminUserService 목록 정렬 화이트리스트 부재** — 존재하지 않는 sort 필드 시 500(타 도메인은 400), 민감 컬럼(userPw 등) 정렬 노출 가능. C-T2/M-T1의 정렬 화이트리스트 표준에서 F만 예외. (API.md 문서화 중 실측으로 발견) | 中 | `AdminUserService.list`에 다른 도메인처럼 정렬 화이트리스트(`sanitizeSort`) 적용 |
+| 12 | ✅ **해결됨** — AdminUserService 목록 정렬 화이트리스트 부재(존재하지 않는 sort 필드 시 500·민감 컬럼 정렬 노출 가능). API.md 문서화 중 실측 발견 → 즉시 수정 | ✅ | `AdminUserService.list`에 `SORT_WHITELIST`+`sanitizeSort` 적용(M~D 표준 답습). userPw 등 민감 컬럼 제외, 미허용 키 → 400 `COMMON_INVALID_REQUEST`. 검증: userPw 400·없는 필드 400(≠500)·허용 200·기본 회귀 + 전체 38/262 green |
 
-**현황(2026-07-06, M7 완료 시점)**: **12건 전부 열림**(D에서 닫은 빚 없음, #10·#11 D 이연·#12 문서화 중 발견). 우선순위별:
-- **中**: #1 환불 원장 정합 · #2 prior 동시성 — D(read 집계)와 무관해 그대로 열림. M7 후속 최우선 후보. · #12 관리자 목록 정렬 화이트리스트 부재(보안+일관성).
+**현황(2026-07-06, M7 완료 시점)**: **11건 열림 + 1건(#12) 해결**. 우선순위별:
+- **中**: #1 환불 원장 정합 · #2 prior 동시성 — D(read 집계)와 무관해 그대로 열림. M7 후속 최우선 후보. (#12는 해결 — 아래 닫힌 빚)
 - **재평가 대상**: #9 격리 취약 — D-T2에서 재발(3번째)이라 **낮→中 승격 검토**(회피 누적 중, 근본 견고화 필요).
 - **낮**: #6 재고차감 응집 · #7 malformed 400 · #8 배너 URL 검증.
 - **스코프 이연(구현 부채 아님)**: #3 EXCHANGE 재출고 · #4 회수비 설정화 · #5 취소사유 컬럼 · #10 EXCHANGE 차액 순매출(#3 연동) · #11 GA 유입 위젯(외부 연동 확정 후).
 CS/D 관련 추가 미구현(CLOSED 흐름·재문의 되돌리기·답변 알림·GA 실연동)은 FR 근거 없어 빚 아님(범위 밖).
-닫힌 빚: 계산기 null-guard(O-T1, V9 NOT NULL + fail-fast) ✅.
+닫힌 빚: 계산기 null-guard(O-T1, V9 NOT NULL + fail-fast) ✅ · #12 관리자 목록 정렬 화이트리스트(`AdminUserService.sanitizeSort`) ✅.
 
 ---
 

@@ -287,8 +287,8 @@
 
 #### F-4. `GET /api/v1/admin/admins` — 관리자 목록(페이징)
 - **쿼리**: 페이징 공통(§1.3). **기본 정렬 `userSeq desc`**.
-  - **정렬(실측)**: 이 엔드포인트는 **정렬 화이트리스트가 없다**(다른 목록 M~D와 다른 유일한 예외). `list(Pageable)`가 `Pageable`을 리포지토리로 그대로 전달하므로, `sort={field},{dir}`의 `field`는 **`User` 엔티티 속성명에 직접 매핑**된다. 유효 속성 예: `userSeq`·`userId`·`userName`·`email`·`userStatus`·`useYn`·`lastLoginDate`·`pointBalance`.
-  - ⚠️ **존재하지 않는 속성명으로 정렬하면 400이 아니라 500**(`COMMON_INTERNAL_ERROR` — 정렬 필드 미검증, 다른 도메인의 `COMMON_INVALID_REQUEST` 400과 대비). 프론트는 위 유효 속성명만 사용할 것.
+  - **정렬 화이트리스트**: `userSeq · userId · userName · email · userStatus · useYn · lastLoginDate · pointBalance` (다른 목록 도메인과 동일 적용 — `userPw` 등 민감/내부 컬럼은 제외).
+  - 화이트리스트 밖 필드(존재하지 않는 필드·민감 컬럼 포함) → **400 `COMMON_INVALID_REQUEST`**(다른 목록과 일관).
 - **응답 200** `PageResponse<AdminListItem>`. `AdminListItem`: `userSeq`(Long) · `userId`(string) · `userName`(string) · `email`(string) · `userStatus`(string) · `useYn`(string Y/N) · `lastLoginDate`(OffsetDateTime|null)
   ```json
   { "code": "SUCCESS", "message": "요청 처리 완료",
