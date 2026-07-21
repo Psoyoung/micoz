@@ -79,20 +79,21 @@
 | 4 | **회수비 설정화** — 현재 독립 상수 3000 | — | `ReturnRefundService.RETURN_SHIPPING_FEE` → `mst_shipping.return_shipping_fee` 컬럼(V11) |
 | 5 | **취소사유 컬럼** — 관리자 취소 사유 미저장 | — | `dat_order.cancel_reason` V11 + `CancelOrderRequest` |
 | 6 | **재고 차감 응집 미완** — 복원은 `OrderStockRestorer`로 응집(R-T1), **차감(`decreaseStock`)은 `PaymentService`에 잔존** | 낮 | 차감도 공유 컴포넌트로 이동 검토 |
-| 7 | **malformed 바디 → 500** — 원론상 400 | 낮 | `GlobalExceptionHandler`에 `HttpMessageNotReadableException` 핸들러 |
-| 8 | **배너 imageUrl URL 형식 미검증** | 낮 | `CreateBannerRequest`/`UpdateBannerRequest` |
+| 7 | ✅ **해결됨** (보안점검 S-3) — malformed 바디·경로변수 타입불일치·필수파라미터 누락이 500이던 것을 400으로. `GlobalExceptionHandler`에 `HttpMessageNotReadableException`·`MethodArgumentTypeMismatchException`·`MissingServletRequestParameterException` 핸들러 추가 → 400 `COMMON_INVALID_REQUEST`(내부 비노출). `eac5e7c` | ✅ | — |
+| 8 | ✅ **해결됨** (보안점검 S-2) — 배너 `imageUrl`/`linkUrl` URL 미검증 → 저장형 XSS 벡터였음. `@Pattern` http/https 화이트리스트(대소문자 무시, `javascript:`/`data:` 차단), linkUrl은 내부 상대경로 허용하되 `//evil.com`·`/\evil.com` 외부이동 차단. Create/UpdateBannerRequest. `9bfa0da` | ✅ | — |
 | 9 | **AdminMemberSearch 격리 취약** — 활성 CUSTOMER 전수를 절대값(==3)으로 단언 → 선행 테스트가 CUSTOMER 남기면 red(잠복 격리 계열). CS·D 테스트는 자체 `@AfterEach`로 회피. **D-T2에서 또 도졌음**(rbac 테스트의 `signupAndLogin` 누출 → 즉시 정리 훅으로 수정). 반복 재발이라 **우선순위 낮→中 재평가 권장**(회피가 아니라 근본 견고화) | 낮→**中?** | `AdminMemberSearchIntegrationTest`를 seeded-only 필터로 견고화(절대값 단언 제거), 또는 공용 `signupAndLogin`에 정리 훅 |
 | 10 | **EXCHANGE 차액 순매출 편입** — D 순매출은 `return_type='RETURN'` COMPLETED refund만 차감. EXCHANGE는 현재 `refund_amount` 항상 0(차액 교환·재출고 미구현, 빚 #3 연동)이라 대상 제외. 차액 교환 구현 시 순매출 차감 대상 편입 필요 | — | 빚 #3(EXCHANGE 재출고) 구현 시 `refund_amount` 산정 + D 순매출 산식에 EXCHANGE COMPLETED 포함 |
 | 11 | **GA 유입 위젯** — D 대시보드 유입경로 위젯은 GA 연동 범위 미확정(PRD FR-ADM-01·§9, admin-overview §4.2)이라 D 범위 제외(Mock도 미제공) | — | GA 연동 범위 확정 후 유입 위젯 엔드포인트 신설 |
 | 12 | ✅ **해결됨** — AdminUserService 목록 정렬 화이트리스트 부재(존재하지 않는 sort 필드 시 500·민감 컬럼 정렬 노출 가능). API.md 문서화 중 실측 발견 → 즉시 수정 | ✅ | `AdminUserService.list`에 `SORT_WHITELIST`+`sanitizeSort` 적용(M~D 표준 답습). userPw 등 민감 컬럼 제외, 미허용 키 → 400 `COMMON_INVALID_REQUEST`. 검증: userPw 400·없는 필드 400(≠500)·허용 200·기본 회귀 + 전체 38/262 green |
 | 13 | **주문 상세 결제 조회 statuses에 CANCELED 미포함** — 환불 후 payment 누락 수정(아래 닫힌 빚)에서 조회 상태집합을 `{PAID, REFUNDED}`로 확정. 현재 `CANCELED` 행은 결제 재시도로 버려진 실패행뿐(`markCanceled` 호출부 없음)이라 결제정보로 부적합해 제외. **향후 전액취소를 `markCanceled`로 구현하면**(성공행을 PAID→CANCELED로 전이) 그 "성공 후 취소행"이 결제정보로 표시돼야 하므로 statuses에 `CANCELED` 추가 검토 필요 | — | `OrderPaymentRepository.findFirstByOrderSeqAndPaymentStatusInOrderByPaymentSeqDesc` 호출부(`AdminOrderQueryService`·`OrderQueryService`)의 상태집합에 `CANCELED` 추가. 단 재시도 실패 `CANCELED`와 구분 필요(실패행은 여전히 배제해야 함) |
 
-**현황(2026-07-21)**: **11건 열림 + 3건(#2·#12·결제조회 버그) 해결**. 우선순위별:
-- **재평가 대상**: #9 격리 취약 — D-T2에서 재발(3번째)이라 **낮→中 승격 검토**(회피 누적 중, 근본 견고화 필요). (M7 후속 최우선 후보 — #1·#2 정리 후 사실상 최상위 잔여 실코드 빚)
-- **낮**: #6 재고차감 응집 · #7 malformed 400 · #8 배너 URL 검증.
+**현황(2026-07-21)**: **9건 열림 + 5건(#2·#7·#8·#12·결제조회 버그) 해결**. **실운영 배포 전 보안 점검(S-1~S-6) 코드 레벨 전부 완료**(`docs/security-audit.md`, 2커밋 `9bfa0da`·`eac5e7c`) — 배포 절차 O-1/O-2만 잔여. 우선순위별:
+- **재평가 대상**: #9 격리 취약 — D-T2에서 재발(3번째)이라 **낮→中 승격 검토**(회피 누적 중, 근본 견고화 필요). (M7 후속 최우선 후보 — 사실상 최상위 잔여 실코드 빚)
+- **낮**: #6 재고차감 응집.
 - **스코프 이연(구현 부채 아님)**: **#1 쿠폰·포인트 사용/적립 생애주기 미구현**(재기술 — 빚 상환 아닌 신규 기능, 실운영 오픈 시 사용-측부터. `docs/return-refund-ledger-decisions.md`) · #3 EXCHANGE 재출고 · #4 회수비 설정화 · #5 취소사유 컬럼 · #10 EXCHANGE 차액 순매출(#3 연동) · #11 GA 유입 위젯(외부 연동 확정 후).
 CS/D 관련 추가 미구현(CLOSED 흐름·재문의 되돌리기·답변 알림·GA 실연동)은 FR 근거 없어 빚 아님(범위 밖).
-닫힌 빚: 계산기 null-guard(O-T1, V9 NOT NULL + fail-fast) ✅ · #12 관리자 목록 정렬 화이트리스트(`AdminUserService.sanitizeSort`) ✅ · **환불 후 주문 상세 결제정보 누락**(관리자·사용자 양측 실기능 버그 — 조회가 `payment_status="PAID"` 하드코딩이라 `markRefunded`로 REFUNDED 전이 시 결제행 못 찾아 null. `OrderPaymentRepository`에 `{PAID,REFUNDED}` 최신 1건 IN-필터 파생 쿼리 추가 → 두 조회부 교체. 결제 재시도로 인한 다중 결제행에도 `LIMIT 1`로 500 없음. 후속 조건은 빚 #13) ✅ · #2 **반품 동시 처리 과다환불**(주문단위 직렬화 부재 — 진짜 관문은 신청 수량검증 TOCTOU. `OrderRepository.findByOrderSeqForUpdate` 최초 락 도입, `create`·`finalizeRefund` 양쪽 주문 행 잠금. 재현 red Σ=2×finalAmount→green race 0/50) ✅.
+닫힌 빚: 계산기 null-guard(O-T1, V9 NOT NULL + fail-fast) ✅ · #12 관리자 목록 정렬 화이트리스트(`AdminUserService.sanitizeSort`) ✅ · **환불 후 주문 상세 결제정보 누락**(관리자·사용자 양측 실기능 버그 — 조회가 `payment_status="PAID"` 하드코딩이라 `markRefunded`로 REFUNDED 전이 시 결제행 못 찾아 null. `OrderPaymentRepository`에 `{PAID,REFUNDED}` 최신 1건 IN-필터 파생 쿼리 추가 → 두 조회부 교체. 결제 재시도로 인한 다중 결제행에도 `LIMIT 1`로 500 없음. 후속 조건은 빚 #13) ✅ · #2 **반품 동시 처리 과다환불**(주문단위 직렬화 부재 — 진짜 관문은 신청 수량검증 TOCTOU. `OrderRepository.findByOrderSeqForUpdate` 최초 락 도입, `create`·`finalizeRefund` 양쪽 주문 행 잠금. 재현 red Σ=2×finalAmount→green race 0/50) ✅ · #7 **잘못된 요청 500→400**(보안 S-3: malformed 바디·타입불일치·필수파라미터 누락 핸들러) ✅ · #8 **배너 URL 저장형 XSS**(보안 S-2: http/https 화이트리스트 + 내부 상대경로 허용·프로토콜상대/백슬래시 차단) ✅.
+**보안 점검(2026-07-21)**: 실운영 배포 전 코드 레벨 S-1~S-6 전부 해결(`docs/security-audit.md`) — S-1 actuator 게이팅·S-2 배너 XSS(#8)·S-3 잘못된요청 400(#7)·S-4 swagger 심층방어·S-5 XFF 명시·S-6 local JWT(코드무관). 배포 절차 O-1(prod env 주입)·O-2(관리자 초기비번 회수)만 잔여. 高위험 0.
 
 ---
 
