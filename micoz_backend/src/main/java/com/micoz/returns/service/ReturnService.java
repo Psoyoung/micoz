@@ -52,7 +52,10 @@ public class ReturnService {
             throw new BusinessException(ErrorCode.COMMON_VALIDATION_ERROR);
         }
 
-        Order order = orderRepository.findByOrderSeqAndUserSeq(orderSeq, userSeq)
+        // 주문 행 비관적 잠금 — 같은 주문의 동시 반품 신청을 직렬화(아래 수량검증 TOCTOU 차단, 빚 #2).
+        // 소유 검증 병행(남의 주문은 없는 것처럼 ORDER_NOT_FOUND). 락은 트랜잭션 종료 시 해제.
+        Order order = orderRepository.findByOrderSeqForUpdate(orderSeq)
+                .filter(o -> o.getUserSeq().equals(userSeq))
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
         validateOrderStatus(order, request.getReturnType());

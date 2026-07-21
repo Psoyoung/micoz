@@ -59,7 +59,9 @@ public class ReturnRefundService {
     public BigDecimal finalizeRefund(Long returnSeq) {
         Return ret = returnRepository.findById(returnSeq)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RETURN_NOT_FOUND));
-        Order order = orderRepository.findById(ret.getOrderSeq())
+        // 주문 행 비관적 잠금 — 같은 주문의 동시 완료를 직렬화(아래 prior 이중계상 차단, 빚 #2).
+        // prior 조회 전에 잠가야 두 완료 트랜잭션이 서로의 COMPLETED를 반영해 순차 계산한다. 트랜잭션 종료 시 해제.
+        Order order = orderRepository.findByOrderSeqForUpdate(ret.getOrderSeq())
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
         // 주문 상품 스냅샷(itemSeq → unitPrice/itemAmount) + itemsTotal
