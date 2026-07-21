@@ -287,8 +287,75 @@ class AdminBannerIntegrationTest extends IntegrationTestSupport {
     }
 
     // ─────────────────────────────────────────────────────────────
+    // [S-2] 저장형 XSS — imageUrl/linkUrl 위험 스킴 차단
+    // ─────────────────────────────────────────────────────────────
+    @Test
+    @DisplayName("[XSS] 위험 스킴 imageUrl(javascript:/data:/대소문자우회) → 400, 정상 https → 통과")
+    void rejectDangerousImageUrlScheme() {
+        assertThat(postBanner("ST-xss-js-" + sfx, "javascript:alert(document.cookie)").getStatusCode())
+                .as("javascript: 스킴 거부").isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(postBanner("ST-xss-data-" + sfx, "data:text/html,<script>alert(1)</script>").getStatusCode())
+                .as("data: 스킴 거부").isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(postBanner("ST-xss-mix-" + sfx, "jAvAsCrIpT:alert(1)").getStatusCode())
+                .as("대소문자 우회 거부").isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(postBanner("ST-xss-ok-" + sfx, "https://cdn.micoz.com/banner.png").getStatusCode())
+                .as("정상 https 통과").isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    @DisplayName("[XSS] linkUrl: 위험스킴·프로토콜상대(//)·백슬래시우회(/\\) → 400, http(s)·내부상대경로·미지정 → 통과")
+    void linkUrlSchemePolicy() {
+        // 거부: javascript: 스킴
+        assertThat(postBannerWithLink("ST-lu-js-" + sfx, "javascript:alert(1)").getStatusCode())
+                .as("javascript: 거부").isEqualTo(HttpStatus.BAD_REQUEST);
+        // 거부: 프로토콜-상대 //evil.com (슬래시로 시작하나 외부로 나감 — 상대경로 허용의 함정)
+        assertThat(postBannerWithLink("ST-lu-proto-" + sfx, "//evil.com").getStatusCode())
+                .as("//evil.com(프로토콜-상대) 거부").isEqualTo(HttpStatus.BAD_REQUEST);
+        // 거부: 백슬래시 우회 /\evil.com (브라우저가 //로 정규화)
+        assertThat(postBannerWithLink("ST-lu-bslash-" + sfx, "/\\evil.com").getStatusCode())
+                .as("/\\evil.com(백슬래시 우회) 거부").isEqualTo(HttpStatus.BAD_REQUEST);
+        // 통과: http/https 절대 URL
+        assertThat(postBannerWithLink("ST-lu-abs-" + sfx, "https://micoz.com/event").getStatusCode())
+                .as("https 절대 URL 통과").isEqualTo(HttpStatus.OK);
+        // 통과: 내부 상대경로
+        assertThat(postBannerWithLink("ST-lu-rel-" + sfx, "/products/123").getStatusCode())
+                .as("내부 상대경로 통과").isEqualTo(HttpStatus.OK);
+        // 통과: linkUrl 미지정(선택)
+        assertThat(postBanner("ST-lu-none-" + sfx, "https://cdn/x.png").getStatusCode())
+                .as("linkUrl 없이 통과").isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    @DisplayName("[XSS] 수정(PUT)도 위험 스킴 imageUrl → 400 (회귀 방지)")
+    void rejectDangerousImageUrlOnUpdate() {
+        long seq = createBanner("HERO", "ST-xssupd-" + sfx, "https://cdn/old.png");
+        Map<String, Object> body = new HashMap<>();
+        body.put("title", "ST-xssupd2-" + sfx);
+        body.put("imageUrl", "javascript:alert(1)");
+        assertThat(putJson("/api/v1/admin/banners/" + seq, adminToken, body).getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    // ─────────────────────────────────────────────────────────────
     // helpers
     // ─────────────────────────────────────────────────────────────
+    private ResponseEntity<String> postBanner(String title, String imageUrl) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("bannerType", "HERO");
+        body.put("title", title);
+        body.put("imageUrl", imageUrl);
+        return postJson("/api/v1/admin/banners", adminToken, body);
+    }
+
+    private ResponseEntity<String> postBannerWithLink(String title, String linkUrl) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("bannerType", "HERO");
+        body.put("title", title);
+        body.put("imageUrl", "https://cdn/x.png");
+        body.put("linkUrl", linkUrl);
+        return postJson("/api/v1/admin/banners", adminToken, body);
+    }
+
     private long createBanner(String type, String title, String imageUrl) {
         Map<String, Object> body = new HashMap<>();
         body.put("bannerType", type);

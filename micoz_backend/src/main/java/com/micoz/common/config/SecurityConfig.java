@@ -55,11 +55,12 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
+                                // health(+probes)만 익명 허용 — 로드밸런서 헬스체크용
                                 "/actuator/health",
-                                "/actuator/info",
-                                "/actuator/metrics/**",
-                                "/actuator/prometheus"
+                                "/actuator/health/**"
                         ).permitAll()
+                        // 운영 지표(metrics/prometheus/info 등)는 ADMIN 전용 — 익명 정찰 차단(S-1)
+                        .requestMatchers("/actuator/**").hasRole("ADMIN")
                         // 카탈로그 공개 조회 (M2)
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/categories/**",
