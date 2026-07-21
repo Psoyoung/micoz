@@ -292,6 +292,12 @@ public class AuthService {
         active.forEach(t -> t.revoke(now));
     }
 
+    /**
+     * 클라이언트 IP 해석 — refresh 토큰 <b>감사(audit) 기록 전용</b>.
+     * ⚠️ S-5: {@code X-Forwarded-For} 첫 값은 클라이언트가 위조 가능하다. 이 값은 감사 로그 용도로만 쓰고
+     * <b>인증/인가 판정에는 절대 쓰지 않는다</b>(현재 어디서도 보안 판정에 미사용). 신뢰 가능한 IP가 필요해지면
+     * 리버스 프록시 신뢰경계를 확정한 뒤 프록시가 세팅한 값만 취해야 한다.
+     */
     private String resolveClientIp(HttpServletRequest request) {
         String xff = request.getHeader("X-Forwarded-For");
         if (xff != null && !xff.isBlank()) {
