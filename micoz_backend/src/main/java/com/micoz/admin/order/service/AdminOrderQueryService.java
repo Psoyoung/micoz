@@ -120,8 +120,9 @@ public class AdminOrderQueryService {
 
         OrderShippingInfo shippingInfo = orderShippingRepository.findByOrderSeq(orderSeq)
                 .map(this::toShippingInfo).orElse(null);
+        // 성사된 결제행(PAID 또는 환불 시 REFUNDED) 최신 1건 — 재시도로 잔존한 FAILED/CANCELED 배제.
         OrderPaymentInfo paymentInfo = orderPaymentRepository
-                .findFirstByOrderSeqAndPaymentStatus(orderSeq, "PAID")
+                .findFirstByOrderSeqAndPaymentStatusInOrderByPaymentSeqDesc(orderSeq, List.of("PAID", "REFUNDED"))
                 .map(this::toPaymentInfo).orElse(null);
 
         BigDecimal itemsTotal = items.stream()

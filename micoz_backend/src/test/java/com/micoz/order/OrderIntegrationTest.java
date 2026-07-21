@@ -123,4 +123,37 @@ class OrderIntegrationTest extends IntegrationTestSupport {
                 Map.of("paymentType", "CARD", "cardNo", "1234-5678-9012-3456"));
         assertThat(parse(retry.getBody()).path("data").path("orderStatus").asText()).isEqualTo("PAID");
     }
+
+    @Test
+    @DisplayName("결제표시 빚: 재시도 이력(FAILED+PAID 다중행) 주문 상세 → 500 없이 성공 결제행 표시 (사용자)")
+    void retryHistoryOrderDetailShowsSuccessPayment() {
+        String access = signupAndLogin();
+        long cartSeq = parse(postJson("/api/v1/cart", access,
+                Map.of("productSeq", PRODUCT_TONER, "optionSeq", OPTION_TONER_150, "quantity", 2)).getBody())
+                .path("data").path("cartSeq").asLong();
+
+        Map<String, Object> orderReq = new HashMap<>();
+        orderReq.put("cartSeqs", java.util.List.of(cartSeq));
+        orderReq.put("recipientName", "테스트");
+        orderReq.put("recipientPhone", "010-0000-0000");
+        orderReq.put("zipCode", "06000");
+        orderReq.put("address", "테스트 주소");
+        orderReq.put("clientAmount", 56000);
+        long orderSeq = parse(postJson("/api/v1/orders", access, orderReq).getBody())
+                .path("data").path("orderSeq").asLong();
+
+        // 거절카드 → FAILED 행 잔존(noRollbackFor), order PENDING 유지 → 정상카드 재결제 → PAID 행 추가(다중행)
+        postJson("/api/v1/orders/" + orderSeq + "/pay", access,
+                Map.of("paymentType", "CARD", "cardNo", "4000-0000-0000-0002"));
+        ResponseEntity<String> retry = postJson("/api/v1/orders/" + orderSeq + "/pay", access,
+                Map.of("paymentType", "CARD", "cardNo", "1234-5678-9012-3456"));
+        assertThat(parse(retry.getBody()).path("data").path("orderStatus").asText()).isEqualTo("PAID");
+
+        // 상세: 다중행에도 500 없이 성공행(PAID) 표시 — A안(findByOrderSeq Optional)이 못 하던 것
+        ResponseEntity<String> detail = getJson("/api/v1/me/orders/" + orderSeq, access);
+        assertThat(detail.getStatusCode()).isEqualTo(HttpStatus.OK);
+        JsonNode payment = parse(detail.getBody()).path("data").path("payment");
+        assertThat(payment.isMissingNode() || payment.isNull()).as("payment 표시됨").isFalse();
+        assertThat(payment.path("paymentStatus").asText()).isEqualTo("PAID");
+    }
 }

@@ -175,6 +175,35 @@ class AdminReturnIntegrationTest extends IntegrationTestSupport {
                 .isEqualTo(HttpStatus.NOT_FOUND);
     }
 
+    @Test
+    @DisplayName("결제표시 빚 수정: 환불(REFUNDED, 재시도 FAILED 공존) 주문 상세 → payment 표시(REFUNDED) · 관리자·사용자 양측 · 500 없음")
+    void refundedOrderDetailShowsPaymentBothSides() {
+        Ordered o = createPaidOrderWithFailedAttempt(); // FAILED + PAID 다중행
+        Integer rowCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM dat_order_payment WHERE order_seq = ?", Integer.class, o.orderSeq());
+        assertThat(rowCount).as("다중 결제행 존재(검증 전제)").isGreaterThanOrEqualTo(2);
+
+        deliver(o.orderSeq());
+        long returnSeq = createReturn(o.access(), o.orderSeq(), "RETURN", "DEFECT", null);
+        driveToInspected(returnSeq, "Y");
+        ok(patch("/api/v1/admin/returns/" + returnSeq + "/complete", Map.of()));
+        assertThat(paymentStatus(o.orderSeq())).as("성공행 REFUNDED 전이").isEqualTo("REFUNDED");
+
+        // 관리자 상세: payment 표시 & REFUNDED (버그 핵심 — 이전엔 "PAID"만 찾아 null이었음), 다중행에도 500 없음
+        ResponseEntity<String> adminDetail = getJson("/api/v1/admin/orders/" + o.orderSeq(), adminToken);
+        assertThat(adminDetail.getStatusCode()).isEqualTo(HttpStatus.OK);
+        JsonNode adminPay = parse(adminDetail.getBody()).path("data").path("payment");
+        assertThat(adminPay.isMissingNode() || adminPay.isNull()).as("관리자: payment 표시").isFalse();
+        assertThat(adminPay.path("paymentStatus").asText()).isEqualTo("REFUNDED");
+
+        // 사용자 상세: 동일 — 환불받은 고객이 자기 결제정보 확인 가능
+        ResponseEntity<String> userDetail = getJson("/api/v1/me/orders/" + o.orderSeq(), o.access());
+        assertThat(userDetail.getStatusCode()).isEqualTo(HttpStatus.OK);
+        JsonNode userPay = parse(userDetail.getBody()).path("data").path("payment");
+        assertThat(userPay.isMissingNode() || userPay.isNull()).as("사용자: payment 표시").isFalse();
+        assertThat(userPay.path("paymentStatus").asText()).isEqualTo("REFUNDED");
+    }
+
     // ───────────────────────── helpers ─────────────────────────
 
     private void driveToInspected(long returnSeq, String restockYn) {
@@ -219,6 +248,30 @@ class AdminReturnIntegrationTest extends IntegrationTestSupport {
         req.put("address", "테스트 주소");
         req.put("clientAmount", QTY1_FINAL);
         long orderSeq = parse(postJson("/api/v1/orders", access, req).getBody()).path("data").path("orderSeq").asLong();
+        ResponseEntity<String> pay = postJson("/api/v1/orders/" + orderSeq + "/pay", access,
+                Map.of("paymentType", "CARD", "cardNo", "1234-5678-9012-3456", "installment", 0));
+        assertThat(parse(pay.getBody()).path("data").path("orderStatus").asText()).isEqualTo("PAID");
+        return new Ordered(orderSeq, access);
+    }
+
+    /** 결제 재시도 이력(거절 FAILED 행 잔존 + 성공 PAID 행) 주문 — 다중 결제행 시나리오. */
+    private Ordered createPaidOrderWithFailedAttempt() {
+        String access = signupAndLogin();
+        long cartSeq = parse(postJson("/api/v1/cart", access,
+                Map.of("productSeq", PRODUCT, "optionSeq", OPTION, "quantity", 1)).getBody())
+                .path("data").path("cartSeq").asLong();
+        Map<String, Object> req = new HashMap<>();
+        req.put("cartSeqs", List.of(cartSeq));
+        req.put("recipientName", "테스트");
+        req.put("recipientPhone", "010-0000-0000");
+        req.put("zipCode", "06000");
+        req.put("address", "테스트 주소");
+        req.put("clientAmount", QTY1_FINAL);
+        long orderSeq = parse(postJson("/api/v1/orders", access, req).getBody()).path("data").path("orderSeq").asLong();
+        // 거절카드 → FAILED 행(noRollbackFor로 커밋), order PENDING 유지
+        postJson("/api/v1/orders/" + orderSeq + "/pay", access,
+                Map.of("paymentType", "CARD", "cardNo", "4000-0000-0000-0002", "installment", 0));
+        // 정상카드 재결제 → PAID
         ResponseEntity<String> pay = postJson("/api/v1/orders/" + orderSeq + "/pay", access,
                 Map.of("paymentType", "CARD", "cardNo", "1234-5678-9012-3456", "installment", 0));
         assertThat(parse(pay.getBody()).path("data").path("orderStatus").asText()).isEqualTo("PAID");

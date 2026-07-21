@@ -85,14 +85,15 @@
 | 10 | **EXCHANGE 차액 순매출 편입** — D 순매출은 `return_type='RETURN'` COMPLETED refund만 차감. EXCHANGE는 현재 `refund_amount` 항상 0(차액 교환·재출고 미구현, 빚 #3 연동)이라 대상 제외. 차액 교환 구현 시 순매출 차감 대상 편입 필요 | — | 빚 #3(EXCHANGE 재출고) 구현 시 `refund_amount` 산정 + D 순매출 산식에 EXCHANGE COMPLETED 포함 |
 | 11 | **GA 유입 위젯** — D 대시보드 유입경로 위젯은 GA 연동 범위 미확정(PRD FR-ADM-01·§9, admin-overview §4.2)이라 D 범위 제외(Mock도 미제공) | — | GA 연동 범위 확정 후 유입 위젯 엔드포인트 신설 |
 | 12 | ✅ **해결됨** — AdminUserService 목록 정렬 화이트리스트 부재(존재하지 않는 sort 필드 시 500·민감 컬럼 정렬 노출 가능). API.md 문서화 중 실측 발견 → 즉시 수정 | ✅ | `AdminUserService.list`에 `SORT_WHITELIST`+`sanitizeSort` 적용(M~D 표준 답습). userPw 등 민감 컬럼 제외, 미허용 키 → 400 `COMMON_INVALID_REQUEST`. 검증: userPw 400·없는 필드 400(≠500)·허용 200·기본 회귀 + 전체 38/262 green |
+| 13 | **주문 상세 결제 조회 statuses에 CANCELED 미포함** — 환불 후 payment 누락 수정(아래 닫힌 빚)에서 조회 상태집합을 `{PAID, REFUNDED}`로 확정. 현재 `CANCELED` 행은 결제 재시도로 버려진 실패행뿐(`markCanceled` 호출부 없음)이라 결제정보로 부적합해 제외. **향후 전액취소를 `markCanceled`로 구현하면**(성공행을 PAID→CANCELED로 전이) 그 "성공 후 취소행"이 결제정보로 표시돼야 하므로 statuses에 `CANCELED` 추가 검토 필요 | — | `OrderPaymentRepository.findFirstByOrderSeqAndPaymentStatusInOrderByPaymentSeqDesc` 호출부(`AdminOrderQueryService`·`OrderQueryService`)의 상태집합에 `CANCELED` 추가. 단 재시도 실패 `CANCELED`와 구분 필요(실패행은 여전히 배제해야 함) |
 
-**현황(2026-07-06, M7 완료 시점)**: **11건 열림 + 1건(#12) 해결**. 우선순위별:
+**현황(2026-07-21)**: **12건 열림 + 2건(#12·결제조회 버그) 해결**. 우선순위별:
 - **中**: #1 환불 원장 정합 · #2 prior 동시성 — D(read 집계)와 무관해 그대로 열림. M7 후속 최우선 후보. (#12는 해결 — 아래 닫힌 빚)
 - **재평가 대상**: #9 격리 취약 — D-T2에서 재발(3번째)이라 **낮→中 승격 검토**(회피 누적 중, 근본 견고화 필요).
 - **낮**: #6 재고차감 응집 · #7 malformed 400 · #8 배너 URL 검증.
 - **스코프 이연(구현 부채 아님)**: #3 EXCHANGE 재출고 · #4 회수비 설정화 · #5 취소사유 컬럼 · #10 EXCHANGE 차액 순매출(#3 연동) · #11 GA 유입 위젯(외부 연동 확정 후).
 CS/D 관련 추가 미구현(CLOSED 흐름·재문의 되돌리기·답변 알림·GA 실연동)은 FR 근거 없어 빚 아님(범위 밖).
-닫힌 빚: 계산기 null-guard(O-T1, V9 NOT NULL + fail-fast) ✅ · #12 관리자 목록 정렬 화이트리스트(`AdminUserService.sanitizeSort`) ✅.
+닫힌 빚: 계산기 null-guard(O-T1, V9 NOT NULL + fail-fast) ✅ · #12 관리자 목록 정렬 화이트리스트(`AdminUserService.sanitizeSort`) ✅ · **환불 후 주문 상세 결제정보 누락**(관리자·사용자 양측 실기능 버그 — 조회가 `payment_status="PAID"` 하드코딩이라 `markRefunded`로 REFUNDED 전이 시 결제행 못 찾아 null. `OrderPaymentRepository`에 `{PAID,REFUNDED}` 최신 1건 IN-필터 파생 쿼리 추가 → 두 조회부 교체. 결제 재시도로 인한 다중 결제행에도 `LIMIT 1`로 500 없음. 후속 조건은 빚 #13) ✅.
 
 ---
 
