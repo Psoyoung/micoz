@@ -73,7 +73,7 @@
 
 | # | 빚 | 우선 | 진입점 |
 |---|---|---|---|
-| 1 | **환불 원장 정합** — 쿠폰 복원(`map_user_coupon`)·포인트 환원/적립회수(`his_point`). 현재 `refund_amount` 금액만 정확, 원장 미반영 | 中 | `AdminReturnService.complete` / `ReturnRefundService` 뒤에 원장 반영 추가 |
+| 1 | **쿠폰·포인트 사용/적립 생애주기 미구현** (재기술 2026-07-21) — 기존 서술 "환불 시 원장 복원 누락"은 부정확했음(실측). 실제로는 주문이 쿠폰/포인트를 소비/적립하지 않음: `CreateOrderRequest`에 필드 없음, `couponDiscount`/`pointUsed`=0 하드코딩, 쿠폰 USED 표시·포인트 차감/적립 실현 코드 전무. 스키마는 대비됨(`map_user_coupon.coupon_status=USED`, `his_point.point_type=CANCEL` 자리 존재). 이건 빚 상환이 아니라 **신규 기능(사용-측 구현)**이며, 구현 시 환불 복원·회수까지 함께 설계해야 함. 사용 여부는 PRD/실운영 로드맵 결정 사항. 실측·결정 라운드: `docs/return-refund-ledger-decisions.md`(Q1=(c) 이연 확정) | 이연 | 쿠폰/포인트를 실제 오픈할 때 사용-측(주문·결제)부터 구현 + 환불 복원/회수 동반 설계 |
 | 2 | ✅ **해결됨** — 반품 동시 처리 시 주문단위 직렬화 부재로 과다 환불. **실측 정정**: 대규모 초과의 진짜 관문은 완료(complete)가 아니라 **신청(create)의 수량검증 TOCTOU**(락 없이 `alreadyReturned` 읽어 동시 신청이 수량 초과 반품 생성 → 완료 시 Σ환불=2×finalAmount). 완료 단독은 ±센트(calculator 선형 안분). | ✅ | `OrderRepository.findByOrderSeqForUpdate`(@Lock PESSIMISTIC_WRITE) 신설 — **프로젝트 최초 락**. `ReturnService.create`(수량검증 전)·`ReturnRefundService.finalizeRefund`(prior 조회 전) 양쪽에서 주문 행 잠금 → 신청+완료 주문단위 직렬화. 단일 자원 최초잠금이라 데드락 없음. 검증: 재현테스트 red(Σ=26000=2×13000)→green(race 0/50)+전체 39/265 실패0 |
 | 3 | **EXCHANGE 재출고** — 현재 EXCHANGE 완료는 상태만. 대체옵션(`exchange_option_seq`) 재배송 미생성 | — | `AdminReturnService.complete` EXCHANGE 분기 + O 배송 로직 |
 | 4 | **회수비 설정화** — 현재 독립 상수 3000 | — | `ReturnRefundService.RETURN_SHIPPING_FEE` → `mst_shipping.return_shipping_fee` 컬럼(V11) |
@@ -88,10 +88,9 @@
 | 13 | **주문 상세 결제 조회 statuses에 CANCELED 미포함** — 환불 후 payment 누락 수정(아래 닫힌 빚)에서 조회 상태집합을 `{PAID, REFUNDED}`로 확정. 현재 `CANCELED` 행은 결제 재시도로 버려진 실패행뿐(`markCanceled` 호출부 없음)이라 결제정보로 부적합해 제외. **향후 전액취소를 `markCanceled`로 구현하면**(성공행을 PAID→CANCELED로 전이) 그 "성공 후 취소행"이 결제정보로 표시돼야 하므로 statuses에 `CANCELED` 추가 검토 필요 | — | `OrderPaymentRepository.findFirstByOrderSeqAndPaymentStatusInOrderByPaymentSeqDesc` 호출부(`AdminOrderQueryService`·`OrderQueryService`)의 상태집합에 `CANCELED` 추가. 단 재시도 실패 `CANCELED`와 구분 필요(실패행은 여전히 배제해야 함) |
 
 **현황(2026-07-21)**: **11건 열림 + 3건(#2·#12·결제조회 버그) 해결**. 우선순위별:
-- **中**: #1 환불 원장 정합 — 반품 완료 후 쿠폰·포인트 원장 반영. M7 후속 최우선(잔여). (#2 동시성은 해결 — 아래 닫힌 빚)
-- **재평가 대상**: #9 격리 취약 — D-T2에서 재발(3번째)이라 **낮→中 승격 검토**(회피 누적 중, 근본 견고화 필요).
+- **재평가 대상**: #9 격리 취약 — D-T2에서 재발(3번째)이라 **낮→中 승격 검토**(회피 누적 중, 근본 견고화 필요). (M7 후속 최우선 후보 — #1·#2 정리 후 사실상 최상위 잔여 실코드 빚)
 - **낮**: #6 재고차감 응집 · #7 malformed 400 · #8 배너 URL 검증.
-- **스코프 이연(구현 부채 아님)**: #3 EXCHANGE 재출고 · #4 회수비 설정화 · #5 취소사유 컬럼 · #10 EXCHANGE 차액 순매출(#3 연동) · #11 GA 유입 위젯(외부 연동 확정 후).
+- **스코프 이연(구현 부채 아님)**: **#1 쿠폰·포인트 사용/적립 생애주기 미구현**(재기술 — 빚 상환 아닌 신규 기능, 실운영 오픈 시 사용-측부터. `docs/return-refund-ledger-decisions.md`) · #3 EXCHANGE 재출고 · #4 회수비 설정화 · #5 취소사유 컬럼 · #10 EXCHANGE 차액 순매출(#3 연동) · #11 GA 유입 위젯(외부 연동 확정 후).
 CS/D 관련 추가 미구현(CLOSED 흐름·재문의 되돌리기·답변 알림·GA 실연동)은 FR 근거 없어 빚 아님(범위 밖).
 닫힌 빚: 계산기 null-guard(O-T1, V9 NOT NULL + fail-fast) ✅ · #12 관리자 목록 정렬 화이트리스트(`AdminUserService.sanitizeSort`) ✅ · **환불 후 주문 상세 결제정보 누락**(관리자·사용자 양측 실기능 버그 — 조회가 `payment_status="PAID"` 하드코딩이라 `markRefunded`로 REFUNDED 전이 시 결제행 못 찾아 null. `OrderPaymentRepository`에 `{PAID,REFUNDED}` 최신 1건 IN-필터 파생 쿼리 추가 → 두 조회부 교체. 결제 재시도로 인한 다중 결제행에도 `LIMIT 1`로 500 없음. 후속 조건은 빚 #13) ✅ · #2 **반품 동시 처리 과다환불**(주문단위 직렬화 부재 — 진짜 관문은 신청 수량검증 TOCTOU. `OrderRepository.findByOrderSeqForUpdate` 최초 락 도입, `create`·`finalizeRefund` 양쪽 주문 행 잠금. 재현 red Σ=2×finalAmount→green race 0/50) ✅.
 
