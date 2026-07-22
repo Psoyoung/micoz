@@ -25,7 +25,8 @@ spring:
     validate-on-migrate: true
 
 server:
-  port: ${SERVER_PORT:8080}
+  # Render 등 PaaS가 주입하는 PORT 우선 → SERVER_PORT → 8080. (PaaS는 동적 PORT를 리슨하길 기대)
+  port: ${PORT:${SERVER_PORT:8080}}
   error:
     include-message: never
     include-stacktrace: never

@@ -26,6 +26,7 @@ USER micoz
 
 EXPOSE 8080
 
-ENV JAVA_OPTS="-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
+# 무료 512MB 대비 여유 확보(OOM 킬=원인불명 재시작 방지). 필요 시 플랫폼서 상향.
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=65.0 -XX:+UseG1GC"
 
 ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /app/app.jar"]

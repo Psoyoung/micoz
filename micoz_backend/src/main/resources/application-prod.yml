@@ -1,4 +1,8 @@
 spring:
+  datasource:
+    hikari:
+      # 무료 티어(512MB·Neon scale-to-zero)용 소형 풀 — 데모 트래픽엔 충분, 연결/메모리 절약.
+      maximum-pool-size: 3
   jpa:
     show-sql: false
     properties:
