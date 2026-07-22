@@ -1,0 +1,128 @@
+/* 컴포넌트 상호작용 스타일 — 인라인 style 로 불가능한 :hover/group-hover 만 최소 정의.
+ * 원본이 JS(onMouseEnter/Leave)·React state 로 처리하던 hover 를 규칙에 따라 이곳으로 이관. */
+
+/* PrimaryBtn — 원본 JS hover 이관.
+ * 베이스 색은 인라인 style(var(--token))로 유지하므로, CSS :hover 가 인라인보다 우선하도록
+ * !important 로 hover 값만 덮어쓴다 (인라인 우선순위가 클래스 셀렉터보다 높기 때문). */
+.micoz-btn--dark:hover {
+  background: var(--plum-800) !important;
+}
+.micoz-btn--outline:hover {
+  background: var(--plum-700) !important;
+  color: var(--cream) !important;
+}
+
+/* LangSwitcher 드롭다운 항목 — 원본 JS hover 이관 */
+.lang-item:hover {
+  background: rgba(74, 52, 112, 0.05) !important;
+}
+
+/* 체크아웃 입력 — 원본 JS onFocus/onBlur 테두리색을 :focus 로 이관 (인라인 baseline 위라 !important) */
+.ck-input:focus {
+  border-color: var(--plum-700) !important;
+}
+
+/* auth 밑줄 입력 — 원본 JS onFocus/onBlur 하단 테두리색을 :focus 로 이관 */
+.auth-input:focus {
+  border-bottom-color: var(--plum-700) !important;
+}
+
+/* 마이페이지 1:1 문의 카드 — 원본 JS hover 테두리색을 :hover 로 이관 */
+.support-item:hover {
+  border-color: var(--plum-300) !important;
+}
+
+/* ─── 관리자 primitive hover (.admin-scope 내에서 사용) ───
+ * 원본 JS hover(onMouseEnter/Leave)를 이관. 배경은 인라인 baseline 에서 제외했으므로 !important 불필요.
+ * 활성/선택 상태는 modifier 클래스로, :not() 으로 hover 제외. */
+.ad-nav {
+  background: transparent;
+}
+.ad-nav:hover:not(.ad-nav--active) {
+  background: #443663;
+}
+.ad-nav--active {
+  background: #4c3c70;
+}
+
+.ad-iconbtn {
+  background: #fff;
+}
+.ad-iconbtn:hover {
+  background: var(--ad-paper-2);
+}
+
+.ad-btn--default,
+.ad-btn--danger {
+  background: #fff;
+}
+.ad-btn--ghost {
+  background: transparent;
+}
+.ad-btn--primary {
+  background: #3a2552;
+}
+.ad-btn--default:hover {
+  background: var(--ad-paper-2);
+}
+.ad-btn--primary:hover {
+  background: #2a1a3e;
+}
+
+.ad-row {
+  background: transparent;
+}
+.ad-row:hover:not(.ad-row--sel) {
+  background: #fafaf7;
+}
+.ad-row--sel {
+  background: #f8f4fb;
+}
+
+/* 조회 로딩 인디케이터(AsyncState) */
+@keyframes adPulseDot {
+  0%, 80%, 100% { opacity: 0.25; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+.ad-pulse-dot {
+  animation: adPulseDot 1s ease-in-out infinite;
+}
+
+.ad-opt {
+  background: transparent;
+}
+.ad-opt:hover:not(.ad-opt--sel) {
+  background: var(--ad-line-soft);
+}
+.ad-opt--sel {
+  background: var(--ad-paper-2);
+}
+
+/* 상품 삭제 버튼 — 원본 JS hover(빨강 반전)를 :hover 로 이관(베이스 인라인 제외) */
+.ad-del-btn {
+  background: #fff;
+  color: #a8322c;
+  border: 1px solid #d8b0aa;
+}
+.ad-del-btn:hover {
+  background: #a8322c;
+  color: #fff;
+  border-color: #a8322c;
+}
+
+/* ProductCard — 원본 React hover state 를 group-hover 로 이관 */
+.pcard__media {
+  transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.pcard:hover .pcard__media {
+  transform: scale(1.04);
+}
+.pcard__add {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.3s;
+}
+.pcard:hover .pcard__add {
+  opacity: 1;
+  transform: translateY(0);
+}

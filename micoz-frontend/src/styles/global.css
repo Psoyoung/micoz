@@ -1,0 +1,48 @@
+/* MICOZ 전역 스타일
+ * 원본 HTML <style> 의 reset/body/미디어쿼리/스크롤바/키프레임을 이관(폐기 금지).
+ * 인라인 style 로 불가능한 것만 여기서 처리한다.
+ */
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; min-height: 100vh; }
+
+body {
+  font-family: var(--sans);
+  color: var(--ink);
+  background: var(--cream);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button { font-family: inherit; color: inherit; }
+input, textarea, select { font-family: inherit; color: inherit; }
+
+a { color: inherit; }
+
+/* ─── 관리자 스크롤바 (원본 MICOZ-admin.html) ──────────────── */
+.admin-scope ::-webkit-scrollbar { width: 10px; height: 10px; }
+.admin-scope ::-webkit-scrollbar-thumb {
+  background: rgba(42, 26, 62, 0.18);
+  border: 2px solid var(--ad-paper);
+}
+.admin-scope ::-webkit-scrollbar-track { background: transparent; }
+.admin-scope table { border-spacing: 0; }
+.admin-scope input[type="checkbox"] { accent-color: #3a2552; }
+
+/* 모달 페이드 (원본 MICOZ-admin.html) */
+@keyframes modalIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* 한글 UI chrome 줄바꿈 방지 (원본 MICOZ-admin.html) */
+.ad-nowrap, .admin-scope button { white-space: nowrap; }
+
+/* ─── 쇼핑몰 모바일 오버라이드 (원본 MICOZ-app.html) ────────── */
+/* NOTE: 아래 선택자들은 원본 인라인 마크업에 맞춰져 있다. 페이지 내용 이식 단계에서
+   실제 마크업과 함께 검토한다. 지금은 보존 목적으로만 둔다. */
+@media (max-width: 768px) {
+  footer {
+    padding: 48px 20px 36px !important;
+  }
+}

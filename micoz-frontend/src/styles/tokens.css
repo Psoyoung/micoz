@@ -1,0 +1,56 @@
+/* MICOZ 디자인 토큰
+ * 원본 HTML의 :root 변수를 이관한다. 변수명·값 그대로 보존.
+ * 쇼핑몰과 관리자는 별도 변수군 — 합치지 않는다.
+ *  - 쇼핑몰 팔레트는 :root (전역)
+ *  - 관리자는 --plum-900/800/700 을 더 어둡게 재정의하므로 .admin-scope 로 스코프
+ *    (AdminLayout 루트에 className="admin-scope" 적용)
+ */
+
+/* ─── 쇼핑몰 (원본 MICOZ-app.html :root) ───────────────────── */
+:root {
+  --plum-900: #2d2347;
+  --plum-800: #352a50;
+  --plum-700: #3a2e58;
+  --plum-600: #3a2552;
+  --plum-500: #4d3470;
+  --plum-400: #6b4d8f;
+  --plum-300: #9a7fb8;
+  --plum-200: #c4b0d8;
+  --plum-100: #e8d8f0;
+  --plum-50:  #f5edf7;
+
+  --cream:    #fafafa;
+  --cream-2:  #efeaf2;
+  --paper:    #ffffff;
+  --ink:      #1a1424;
+  --muted:    #6b5d72;
+  --line:     rgba(42, 26, 62, 0.12);
+  --line-strong: rgba(42, 26, 62, 0.22);
+  --gold:     #b89968;
+
+  /* 폰트 — 쇼핑몰·관리자 공용 */
+  --serif:    "Noto Serif KR", "Spectral", "Times New Roman", serif;
+  --serif-en: "Spectral", "Noto Serif KR", serif;
+  --sans:     "Pretendard", -apple-system, "Apple SD Gothic Neo", system-ui, sans-serif;
+}
+
+/* ─── 관리자 (원본 MICOZ-admin.html :root) ─────────────────── */
+/* AdminLayout 루트 div 에 className="admin-scope" 를 붙여 적용한다. */
+.admin-scope {
+  /* 관리자 전용 중립 — 따뜻한 종이톤 */
+  --ad-paper:       #f6f3ec;
+  --ad-paper-2:     #fbf9f3;
+  --ad-ink:         #1a1424;
+  --ad-muted:       #6b5d72;
+  --ad-line:        rgba(42, 26, 62, 0.10);
+  --ad-line-soft:   rgba(42, 26, 62, 0.05);
+  --ad-line-strong: rgba(42, 26, 62, 0.18);
+
+  /* 관리자에서 더 진한 플럼으로 재정의 (쇼핑몰 값을 덮어씀) */
+  --plum-900: #18102a;
+  --plum-800: #221638;
+  --plum-700: #2a1a3e;
+
+  /* 관리자 전용 모노 폰트 */
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}

@@ -1,0 +1,35 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.suo
+*.user
+
+# Logs
+*.log
+
+# Node (필요 시)
+node_modules/
+npm-debug.log*
+
+# Build output
+dist/
+build/
+
+# TS build artifacts (tsc -b 가 생성)
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+
+# Env
+.env
+.env.local
+.env.*.local
+
+.claude/
+.omc/
+.playwright-mcp/
+_legacy/
